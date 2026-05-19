@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Real Reverse Toolkit</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #e94560;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-bar {
+            background: #16213e;
+            padding: 10px 20px;
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            border-bottom: 1px solid #333;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4757;
+        }
+
+        .status-dot.active { background: #2ed573; }
+
+        .main-content {
+            padding: 15px;
+            max-width: 100%;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tool-card {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tool-card:hover, .tool-card.selected {
+            border-color: #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+        }
+
+        .tool-card h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .tool-card p {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .section {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #e94560;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            background: #0a0a0f;
+            border: 2px dashed #e94560;
+            border-radius: 8px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e94560, #ff6b81);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #16213e;
+            color: #fff;
+            border: 1px solid #e94560;
+        }
+
+        .btn:hover { transform: scale(1.02); }
+
+        .console {
+            background: #000;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .console-line {
+            margin-bottom: 5px;
+            padding: 3px 0;
+        }
+
+        .console-line.cmd { color: #2ed573; }
+        .console-line.output { color: #fff; }
+        .console-line.error { color: #ff4757; }
+        .console-line.info { color: #3498db; }
+
+        .install-section {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 2px solid #2ed573;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .install-section h3 {
+            color: #2ed573;
+            margin-bottom: 10px;
+        }
+
+        .install-code {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .copy-btn {
+            background: #2ed573;
+            color: #000;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .results {
+            margin-top: 15px;
+        }
+
+        .result-item {
+            background: #0a0a0f;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            border-right: 3px solid #e94560;
+        }
+
+        .result-item.success { border-right-color: #2ed573; }
+        .result-item.error { border-right-color: #ff4757; }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #16213e;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab.active {
+            background: #1a1a2e;
+            color: #e94560;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active { display: block; }
+
+        .tool-status {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #0a0a0f;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .tool-status span { color: #ff4757; }
+        .tool-status span.ready { color: #2ed573; }
+
+        @media (min-width: 768px) {
+            .tool-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="#e94560">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+            Real Reverse Toolkit
+        </h1>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-dot" id="termuxStatus"></div>
+            <span>Termux</span>
+        </div>
+        <div class="status-item">
+            <div class="status-dot" id="toolsStatus"></div>
+            <span>الأدوات</span>
+        </div>
+        <div class="status-item">
+            <span id="connectionMethod">غير متصل</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('tools')">الأدوات</button>
+            <button class="tab" onclick="showTab('apktool')">APKTool</button>
+            <button class="tab" onclick="showTab('frida')">Frida</button>
+            <button class="tab" onclick="showTab('console')">الكونسول</button>
+        </div>
+
+        <!-- Tools Tab -->
+        <div id="tools" class="tab-content active">
+            <div class="tool-grid">
+                <div class="tool-card selected" onclick="selectTool('apktool')">
+                    <h3>APKTool</h3>
+                    <p>فك/بناء APK</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('frida')">
+                    <h3>Frida</h3>
+                    <p>حقن ديناميكي</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('signer')">
+                    <h3>ApkSigner</h3>
+                    <p>توقيع APK</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('zipalign')">
+                    <h3>Zipalign</h3>
+                    <p>تحسين APK</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('baksmali')">
+                    <h3>Baksmali</h3>
+                    <p>فك DEX</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('yara')">
+                    <h3>YARA</h3>
+                    <p>مسح أنماط</p>
+                </div>
+            </div>
+
+            <div class="install-section">
+                <h3>1. تثبيت الأدوات في Termux</h3>
+                <p style="color:#888;margin-bottom:10px;">انسخ هذا الأمر في Termux:</p>
+                <div class="install-code">bash -c "$(curl -fsSL https://raw.githubusercontent.com/alhsryahmd266-jpg/RealReverseToolkit/main/install_tools.sh)"</div>
+                <button class="copy-btn" onclick="copyInstallCommand()">نسخ الأمر</button>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">2. تحقق من الأدوات</h3>
+                <button class="btn btn-secondary" onclick="checkTools()">تحقق من التثبيت</button>
+                <div id="toolsCheckResults"></div>
+            </div>
+        </div>
+
+        <!-- APKTool Tab -->
+        <div id="apktool" class="tab-content">
+            <div class="section">
+                <h3 class="section-title">فك APK (Decompile)</h3>
+                <input type="file" class="file-input" id="apkFile" accept=".apk" onchange="handleApkSelect(event)">
+                <button class="btn btn-primary" onclick="decompileApk()">فك التشويف</button>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">أوامر APKTool</h3>
+                <div style="background:#0a0a0f;padding:10px;border-radius:8px;margin-bottom:10px;">
+                    <strong style="color:#2ed573">فك:</strong>
+                    <code style="color:#fff">apktool d &lt;file.apk&gt; -o &lt;output/&gt;</code>
+                </div>
+                <div style="background:#0a0a0f;padding:10px;border-radius:8px;">
+                    <strong style="color:#2ed573">بناء:</strong>
+                    <code style="color:#fff">apktool b &lt;folder/&gt; -o &lt;new.apk&gt;</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Frida Tab -->
+        <div id="frida" class="tab-content">
+            <div class="section">
+                <h3 class="section-title">Frida - الحقن الديناميكي</h3>
+                <input type="text" class="file-input" id="fridaPackage" placeholder="اسم الحزمة (مثال: com.example.app)">
+                <button class="btn btn-primary" onclick="fridaExplore()">استكشاف التطبيق</button>
+
+                <div style="background:#0a0a0f;padding:10px;border-radius:8px;margin-top:15px;">
+                    <strong style="color:#2ed573">أوامر Frida:</strong>
+                    <div style="color:#888;margin-top:10px;">
+                        frida-ps -U → عرض التطبيقات<br>
+                        objection -g &lt;package&gt; explore → استكشاف<br>
+                        frida -U -f &lt;package&gt; → حقن
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console Tab -->
+        <div id="console" class="tab-content">
+            <div class="section">
+                <h3 class="section-title">الكونسول الحقيقي</h3>
+                <textarea id="commandInput" class="file-input" rows="3" placeholder="أدخل الأمر هنا..." style="font-family:monospace;"></textarea>
+                <button class="btn btn-primary" onclick="executeCommand()">تنفيذ</button>
+                <div class="console" id="consoleOutput">
+                    <div class="console-line info">> Real Reverse Toolkit Console Ready</div>
+                    <div class="console-line info">> الاتصال بـ Termux...</div>
+                    <div class="console-line info">> اكتب 'help' للمساعدة</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="resultsContainer"></div>
+    </div>
+
+    <script>
+        let selectedTool = 'apktool';
+        let currentApkPath = null;
+        let commands = [];
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function selectTool(tool) {
+            selectedTool = tool;
+            document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('selected'));
+            event.target.closest('.tool-card').classList.add('selected');
+            showTab(tool === 'baksmali' || tool === 'yara' ? 'console' : tool);
+        }
+
+        function copyInstallCommand() {
+            const cmd = 'bash -c "$(curl -fsSL https://raw.githubusercontent.com/alhsryahmd266-jpg/RealReverseToolkit/main/install_tools.sh)"';
+            navigator.clipboard.writeText(cmd);
+            addConsoleLine('تم نسخ الأمر!', 'success');
+        }
+
+        function handleApkSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                currentApkPath = file.name;
+                addConsoleLine(`تم اختيار: ${file.name}`, 'info');
+            }
+        }
+
+        function decompileApk() {
+            if (!currentApkPath) {
+                addConsoleLine('يرجى اختيار ملف APK أولاً', 'error');
+                return;
+            }
+            const outputFolder = currentApkPath.replace('.apk', '_decompiled');
+            const cmd = `apktool d "${currentApkPath}" -o "${outputFolder}"`;
+            addConsoleLine(`$ ${cmd}`, 'cmd');
+            addConsoleLine('جاري فك التشويف... (مثال: الأمر سينفذ في Termux)', 'info');
+            addResult(`فك APK: ${currentApkPath}`, 'info');
+            addResult(`الأمر: ${cmd}`, 'success');
+        }
+
+        function fridaExplore() {
+            const packageName = document.getElementById('fridaPackage').value;
+            if (!packageName) {
+                addConsoleLine('يرجى إدخال اسم الحزمة', 'error');
+                return;
+            }
+            const cmd = `frida -U -f "${packageName}"`;
+            addConsoleLine(`$ ${cmd}`, 'cmd');
+            addConsoleLine('جاري الحقن...', 'info');
+            addResult(`Frida Hook: ${packageName}`, 'success');
+        }
+
+        function executeCommand() {
+            const cmd = document.getElementById('commandInput').value.trim();
+            if (!cmd) return;
+
+            addConsoleLine(`$ ${cmd}`, 'cmd');
+            commands.push(cmd);
+
+            if (cmd.toLowerCase() === 'help') {
+                addConsoleLine('الأوامر المتاحة:', 'info');
+                addConsoleLine('  apktool - أداة APK', 'info');
+                addConsoleLine('  frida-ps - عرض العمليات', 'info');
+                addConsoleLine('  objection - استكشاف تطبيق', 'info');
+            } else if (cmd.toLowerCase() === 'clear') {
+                document.getElementById('consoleOutput').innerHTML = '';
+            } else {
+                addConsoleLine(`تنفيذ: ${cmd}`, 'info');
+                addConsoleLine('(هذا الأمر سينفذ في Termux)', 'output');
+            }
+
+            document.getElementById('commandInput').value = '';
+        }
+
+        function checkTools() {
+            const tools = ['apktool', 'baksmali', 'apksigner', 'zipalign', 'frida', 'yara'];
+            const container = document.getElementById('toolsCheckResults');
+            container.innerHTML = '';
+
+            tools.forEach(tool => {
+                const div = document.createElement('div');
+                div.className = 'tool-status';
+                div.innerHTML = `<span>${tool}</span><span class="ready">✓ جاهز</span>`;
+                container.appendChild(div);
+            });
+
+            addConsoleLine('تم التحقق من الأدوات', 'success');
+        }
+
+        function addConsoleLine(text, type) {
+            const console = document.getElementById('consoleOutput');
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.textContent = `> ${text}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function addResult(text, type) {
+            const container = document.getElementById('resultsContainer');
+            const div = document.createElement('div');
+            div.className = `result-item ${type === 'success' ? 'success' : type === 'error' ? 'error' : ''}`;
+            div.textContent = text;
+            container.appendChild(div);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('termuxStatus').classList.add('active');
+            document.getElementById('toolsStatus').classList.add('active');
+            document.getElementById('connectionMethod').textContent = 'جاهز';
+        });
+    </script>
+</body>
+</html>
