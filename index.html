@@ -232,7 +232,7 @@ textarea.input-field{resize:vertical;min-height:80px}
 
     <div class="list-title">الخطوة 4 — إنشاء Keystore</div>
     <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('keytool -genkey -v -keystore phantom.jks -alias phantom -keyalg RSA -keysize 4096 -validity 36500 -storepass phantom2024 -keypass phantom2024 -dname \"CN=PHANTOM,O=RE,C=EG\"')">نسخ</button>
+      <button class="copy-btn" onclick="copyText('keytool -genkey -v -keystore phantom.jks -alias phantom -keyalg RSA -keysize 4096 -validity 36500 -storepass phantom2024 -keypass phantom2024 -dname \&quot;CN=PHANTOM,O=RE,C=EG\&quot;')">نسخ</button>
       <div class="cmd-text">keytool -genkey -v -keystore phantom.jks -alias phantom -keyalg RSA -keysize 4096 -validity 36500 -storepass phantom2024 -keypass phantom2024 -dname "CN=PHANTOM,O=RE,C=EG"</div>
     </div>
 
@@ -308,7 +308,7 @@ textarea.input-field{resize:vertical;min-height:80px}
 
     <div class="list-title">4. إضافة System.loadLibrary في smali</div>
     <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('const-string v0, \"frida-gadget\"\ninvoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V')">نسخ</button>
+      <button class="copy-btn" onclick="copyText('const-string v0, \&quot;frida-gadget\&quot;\ninvoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V')">نسخ</button>
       <div class="cmd-text">const-string v0, "frida-gadget"
 invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V</div>
     </div>
@@ -489,7 +489,7 @@ invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V</div>
   <div class="card">
     <div class="card-title">🖥️ تشغيل سيرفر PHANTOM على PC</div>
     <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('pip install websockets androguard jadx-python\npython3 -c \"\nimport asyncio, websockets, json, subprocess\nasync def handler(ws):\n    async for msg in ws:\n        d=json.loads(msg)\n        if d[\'cmd\']==\'analyze\':\n            r=subprocess.run([\'androguard\',\'analyze\',\'-i\',d[\'file\']],capture_output=True,text=True)\n            await ws.send(json.dumps({\'result\':r.stdout}))\nasyncio.run(websockets.serve(handler,\'0.0.0.0\',8765))\n\"')">نسخ</button>
+      <button class="copy-btn" onclick="copyText('pip install websockets androguard jadx-python\npython3 -c \&quot;\nimport asyncio, websockets, json, subprocess\nasync def handler(ws):\n    async for msg in ws:\n        d=json.loads(msg)\n        if d[\'cmd\']==\'analyze\':\n            r=subprocess.run([\'androguard\',\'analyze\',\'-i\',d[\'file\']],capture_output=True,text=True)\n            await ws.send(json.dumps({\'result\':r.stdout}))\nasyncio.run(websockets.serve(handler,\'0.0.0.0\',8765))\n\&quot;')">نسخ</button>
       <div class="cmd-text">pip install websockets androguard
 python3 phantom_server.py --port 8765</div>
     </div>
@@ -859,6 +859,10 @@ function addBridgeLog(msg, type) {
   d.textContent = msg;
   t.appendChild(d);
   t.scrollTop = t.scrollHeight;
+}
+
+function copyKeytool(){
+  copyText('keytool -genkey -v -keystore phantom.jks -alias phantom -keyalg RSA -keysize 4096 -validity 36500 -storepass phantom2024 -keypass phantom2024');
 }
 
 // Drag & drop
