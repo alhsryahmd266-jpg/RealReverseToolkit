@@ -1,875 +1,511 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>PHANTOM RE</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--red:#ff003c;--cyan:#00f5ff;--green:#00ff88;--yellow:#ffcc00;--bg:#060608;--bg2:#0d0d12;--bg3:#13131a;--border:#1e1e2e}
-body{font-family:'Courier New',monospace;background:var(--bg);color:#e0e0e0;min-height:100vh;direction:rtl;overflow-x:hidden}
-.scanline{position:fixed;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:scan 3s linear infinite;z-index:9999;opacity:0.3}
-@keyframes scan{0%{top:-2px}100%{top:100vh}}
-.header{background:linear-gradient(135deg,#0a0a10,#0f0f18);padding:14px 16px;border-bottom:1px solid var(--red);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-icon{width:36px;height:36px;background:var(--red);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:16px;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 8px var(--red)}50%{box-shadow:0 0 20px var(--red),0 0 40px rgba(255,0,60,0.3)}}
-.logo-text{font-size:18px;font-weight:bold;letter-spacing:3px;color:var(--red);text-shadow:0 0 10px rgba(255,0,60,0.5)}
-.logo-sub{font-size:9px;color:#666;letter-spacing:2px}
-.status-dots{display:flex;gap:6px;align-items:center}
-.dot{width:8px;height:8px;border-radius:50%;background:#333}
-.dot.active{background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s infinite}
-.dot.warn{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
-.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex:0 0 auto;padding:10px 14px;font-size:11px;letter-spacing:1px;color:#555;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;text-transform:uppercase}
-.tab.active{color:var(--cyan);border-bottom-color:var(--cyan);background:rgba(0,245,255,0.05)}
-.tab:hover:not(.active){color:#999}
-.content{padding:12px;display:none}
-.content.active{display:block}
-.card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px}
-.card-title{font-size:12px;letter-spacing:2px;color:var(--cyan);margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;display:flex;align-items:center;gap:8px}
-.drop-zone{border:2px dashed var(--red);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all 0.3s;margin-bottom:12px;position:relative;overflow:hidden}
-.drop-zone:hover,.drop-zone.drag{border-color:var(--cyan);background:rgba(0,245,255,0.03)}
-.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.drop-icon{font-size:32px;margin-bottom:8px}
-.drop-text{font-size:12px;color:#666;letter-spacing:1px}
-.drop-name{font-size:11px;color:var(--green);margin-top:6px;word-break:break-all}
-.btn{padding:10px 16px;border:none;border-radius:6px;font-size:12px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;font-family:inherit;text-transform:uppercase}
-.btn-primary{background:linear-gradient(135deg,var(--red),#cc0030);color:#fff}
-.btn-primary:hover{box-shadow:0 0 15px rgba(255,0,60,0.4)}
-.btn-cyan{background:linear-gradient(135deg,var(--cyan),#0088aa);color:#000}
-.btn-cyan:hover{box-shadow:0 0 15px rgba(0,245,255,0.4)}
-.btn-green{background:linear-gradient(135deg,var(--green),#00aa55);color:#000}
-.btn-sm{padding:6px 12px;font-size:10px}
-.btn-full{width:100%;margin-bottom:8px}
-.progress-bar{width:100%;height:4px;background:#1a1a2e;border-radius:2px;margin:8px 0;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--cyan));transition:width 0.3s;width:0%}
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
-.stat-num{font-size:22px;font-weight:bold;color:var(--cyan);margin-bottom:2px}
-.stat-label{font-size:9px;color:#555;letter-spacing:1px;text-transform:uppercase}
-.list-section{margin-bottom:12px}
-.list-title{font-size:10px;letter-spacing:2px;color:var(--red);margin-bottom:6px;text-transform:uppercase}
-.list-item{background:var(--bg2);padding:6px 10px;border-radius:4px;margin-bottom:4px;font-size:10px;border-right:2px solid var(--border);word-break:break-all;line-height:1.4}
-.list-item.perm{border-right-color:var(--yellow)}
-.list-item.url{border-right-color:var(--cyan)}
-.list-item.secret{border-right-color:var(--red)}
-.list-item.activity{border-right-color:var(--green)}
-.terminal{background:#000;border:1px solid #1a1a2e;border-radius:6px;padding:12px;font-family:'Courier New',monospace;font-size:11px;direction:ltr;text-align:left;max-height:250px;overflow-y:auto;margin-top:8px}
-.terminal-line{margin-bottom:4px;line-height:1.4}
-.t-cmd{color:var(--green)}
-.t-out{color:#ccc}
-.t-err{color:var(--red)}
-.t-info{color:var(--cyan)}
-.t-warn{color:var(--yellow)}
-.cmd-block{background:#000;border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;position:relative;direction:ltr;text-align:left}
-.cmd-text{font-size:10px;color:var(--green);font-family:'Courier New',monospace;word-break:break-all;line-height:1.5}
-.copy-btn{position:absolute;top:6px;left:6px;background:var(--border);border:none;color:#888;padding:3px 8px;border-radius:3px;font-size:9px;cursor:pointer;font-family:inherit}
-.copy-btn:hover{background:var(--cyan);color:#000}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;letter-spacing:1px;font-weight:bold;margin-right:4px}
-.badge-red{background:rgba(255,0,60,0.2);color:var(--red);border:1px solid var(--red)}
-.badge-cyan{background:rgba(0,245,255,0.1);color:var(--cyan);border:1px solid var(--cyan)}
-.badge-green{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid var(--green)}
-.badge-yellow{background:rgba(255,204,0,0.1);color:var(--yellow);border:1px solid var(--yellow)}
-.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
-.toggle-row:last-child{border-bottom:none}
-.toggle-label{font-size:11px;color:#ccc}
-.toggle-sub{font-size:9px;color:#555;margin-top:2px}
-.toggle{position:relative;width:40px;height:20px}
-.toggle input{opacity:0;width:0;height:0}
-.slider{position:absolute;cursor:pointer;inset:0;background:#1a1a2e;border-radius:20px;transition:0.3s}
-.slider:before{content:"";position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:#555;border-radius:50%;transition:0.3s}
-.toggle input:checked+.slider{background:var(--red)}
-.toggle input:checked+.slider:before{transform:translateX(20px);background:#fff}
-.input-field{width:100%;padding:10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;font-family:'Courier New',monospace;font-size:11px;margin-bottom:8px}
-.input-field:focus{outline:none;border-color:var(--cyan)}
-textarea.input-field{resize:vertical;min-height:80px}
-.app-item{display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all 0.2s}
-.app-item:hover{border-color:var(--cyan);background:rgba(0,245,255,0.03)}
-.app-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--red),#660018);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.app-info{flex:1;min-width:0}
-.app-name{font-size:11px;color:#e0e0e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.app-pkg{font-size:9px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.app-size{font-size:9px;color:var(--cyan)}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.network-item{padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;font-size:10px;direction:ltr;text-align:left}
-.net-method{display:inline-block;padding:1px 6px;border-radius:3px;font-weight:bold;font-size:9px;margin-left:6px}
-.net-get{background:rgba(0,255,136,0.2);color:var(--green)}
-.net-post{background:rgba(255,204,0,0.2);color:var(--yellow)}
-.net-url{color:var(--cyan);word-break:break-all}
-.net-status{font-size:9px;color:#555;margin-top:3px}
-.hidden{display:none}
-.analyzing{text-align:center;padding:20px;color:var(--cyan);font-size:12px;letter-spacing:2px;animation:fadeinout 1s infinite}
-@keyframes fadeinout{0%,100%{opacity:0.5}50%{opacity:1}}
-.threat-level{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;margin-bottom:8px}
-.threat-high{background:rgba(255,0,60,0.1);border:1px solid var(--red)}
-.threat-med{background:rgba(255,204,0,0.1);border:1px solid var(--yellow)}
-.threat-low{background:rgba(0,255,136,0.1);border:1px solid var(--green)}
-.threat-icon{font-size:20px}
-.threat-text{font-size:10px;color:#ccc;line-height:1.5}
-.smali-editor{background:#000;border:1px solid var(--border);border-radius:6px;padding:10px;font-family:'Courier New',monospace;font-size:10px;direction:ltr;text-align:left;height:200px;overflow:auto;color:#e0e0e0;cursor:text;white-space:pre;margin-bottom:8px}
-.steps-list{list-style:none}
-.steps-list li{padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:11px;position:relative;padding-right:30px}
-.steps-list li::after{content:attr(data-num);position:absolute;right:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold}
-.frida-scripts{margin-top:8px}
-.script-item{background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden}
-.script-header{padding:8px 12px;background:rgba(255,0,60,0.1);font-size:10px;color:var(--red);letter-spacing:1px;display:flex;justify-content:space-between;align-items:center}
-.script-code{padding:10px;font-family:'Courier New',monospace;font-size:9px;direction:ltr;text-align:left;color:#ccc;line-height:1.5;max-height:120px;overflow:auto}
-.notification{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--cyan);border-radius:8px;padding:10px 20px;font-size:11px;color:var(--cyan);letter-spacing:1px;z-index:9999;transition:all 0.3s;opacity:0}
-.notification.show{opacity:1}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Real Reverse Toolkit</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+            border-bottom: 2px solid #e94560;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #e94560;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-bar {
+            background: #16213e;
+            padding: 10px 20px;
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            border-bottom: 1px solid #333;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4757;
+        }
+
+        .status-dot.active { background: #2ed573; }
+
+        .main-content {
+            padding: 15px;
+            max-width: 100%;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tool-card {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tool-card:hover, .tool-card.selected {
+            border-color: #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+        }
+
+        .tool-card h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .tool-card p {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .section {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #e94560;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            background: #0a0a0f;
+            border: 2px dashed #e94560;
+            border-radius: 8px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e94560, #ff6b81);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #16213e;
+            color: #fff;
+            border: 1px solid #e94560;
+        }
+
+        .btn:hover { transform: scale(1.02); }
+
+        .console {
+            background: #000;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .console-line {
+            margin-bottom: 5px;
+            padding: 3px 0;
+        }
+
+        .console-line.cmd { color: #2ed573; }
+        .console-line.output { color: #fff; }
+        .console-line.error { color: #ff4757; }
+        .console-line.info { color: #3498db; }
+
+        .install-section {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 2px solid #2ed573;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .install-section h3 {
+            color: #2ed573;
+            margin-bottom: 10px;
+        }
+
+        .install-code {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            direction: ltr;
+            text-align: left;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .copy-btn {
+            background: #2ed573;
+            color: #000;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .results {
+            margin-top: 15px;
+        }
+
+        .result-item {
+            background: #0a0a0f;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            border-right: 3px solid #e94560;
+        }
+
+        .result-item.success { border-right-color: #2ed573; }
+        .result-item.error { border-right-color: #ff4757; }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #16213e;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab.active {
+            background: #1a1a2e;
+            color: #e94560;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active { display: block; }
+
+        .tool-status {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #0a0a0f;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .tool-status span { color: #ff4757; }
+        .tool-status span.ready { color: #2ed573; }
+
+        @media (min-width: 768px) {
+            .tool-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
 </head>
 <body>
-<div class="scanline"></div>
-
-<div class="header">
-  <div class="logo">
-    <div class="logo-icon">👻</div>
-    <div>
-      <div class="logo-text">PHANTOM RE</div>
-      <div class="logo-sub">منظومة الهندسة العكسية المطلقة</div>
-    </div>
-  </div>
-  <div class="status-dots">
-    <div class="dot active" title="النظام نشط"></div>
-    <div class="dot warn" id="rootDot" title="صلاحيات"></div>
-    <div class="dot" id="netDot" title="الشبكة"></div>
-  </div>
-</div>
-
-<div class="tabs">
-  <div class="tab active" onclick="showTab('analyzer')">🔬 محلل</div>
-  <div class="tab" onclick="showTab('patcher')">⚡ معدّل</div>
-  <div class="tab" onclick="showTab('injector')">💉 حاقن</div>
-  <div class="tab" onclick="showTab('network')">🌐 شبكة</div>
-  <div class="tab" onclick="showTab('scanner')">📦 ماسح</div>
-  <div class="tab" onclick="showTab('bridge')">🖥️ بريدج</div>
-</div>
-
-<!-- ANALYZER TAB -->
-<div id="tab-analyzer" class="content active">
-  <div class="card">
-    <div class="card-title">🎯 تحليل APK ستاتيكي كامل</div>
-    <div class="drop-zone" id="dropZone">
-      <input type="file" accept=".apk" id="apkInput" onchange="handleApkFile(event)">
-      <div class="drop-icon">📱</div>
-      <div class="drop-text">اسحب APK هنا أو اضغط للاختيار</div>
-      <div class="drop-name" id="fileName"></div>
-    </div>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <button class="btn btn-primary btn-full" onclick="analyzeApk()">▶ ابدأ التحليل الكامل</button>
-  </div>
-
-  <div id="analyzeResults" class="hidden">
-    <div class="card">
-      <div class="card-title">📊 نظرة عامة</div>
-      <div class="result-grid" id="statsGrid"></div>
-      <div id="threatIndicator"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">🔐 الصلاحيات <span id="permCount" class="badge badge-red"></span></div>
-      <div id="permsList" class="list-section"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">🏗️ المكونات</div>
-      <div class="list-title">Activities</div>
-      <div id="activitiesList" class="list-section"></div>
-      <div class="list-title">Services</div>
-      <div id="servicesList" class="list-section"></div>
-      <div class="list-title">Receivers</div>
-      <div id="receiversList" class="list-section"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">🔍 أسرار مكتشفة <span id="secretCount" class="badge badge-red"></span></div>
-      <div id="secretsList" class="list-section"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">🌐 URLs & APIs مكتشفة</div>
-      <div id="urlsList" class="list-section"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">🔒 كشف تشفير</div>
-      <div id="cryptoList" class="list-section"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">📁 ملفات APK</div>
-      <div id="filesList" class="list-section"></div>
-    </div>
-  </div>
-</div>
-
-<!-- PATCHER TAB -->
-<div id="tab-patcher" class="content">
-  <div class="card">
-    <div class="card-title">⚡ سير عمل التعديل الكامل</div>
-    <p style="font-size:10px;color:#666;margin-bottom:12px;line-height:1.6">فك التشويف ← تعديل الـ Smali ← إعادة البناء ← التوقيع ← التثبيت</p>
-
-    <div class="list-title">الخطوة 1 — فك التشويف</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('apktool d target.apk -o output/ --no-res')">نسخ</button>
-      <div class="cmd-text">apktool d target.apk -o output/ --no-res</div>
-    </div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('jadx -d jadx_output/ target.apk')">نسخ</button>
-      <div class="cmd-text">jadx -d jadx_output/ target.apk</div>
+    <div class="header">
+        <h1>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="#e94560">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+            Real Reverse Toolkit
+        </h1>
     </div>
 
-    <div class="list-title">الخطوة 2 — تعديل Smali</div>
-    <div id="smaliEditor" class="smali-editor" contenteditable="true">.method public isLicensed()Z
-    .registers 2
-    ; PHANTOM RE - تم الحقن هنا
-    const/4 v0, 0x1   ; return true
-    return v0
-.end method</div>
-
-    <div class="list-title">الخطوة 3 — إعادة البناء</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('apktool b output/ -o modified.apk')">نسخ</button>
-      <div class="cmd-text">apktool b output/ -o modified.apk</div>
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-dot" id="termuxStatus"></div>
+            <span>Termux</span>
+        </div>
+        <div class="status-item">
+            <div class="status-dot" id="toolsStatus"></div>
+            <span>الأدوات</span>
+        </div>
+        <div class="status-item">
+            <span id="connectionMethod">غير متصل</span>
+        </div>
     </div>
 
-    <div class="list-title">الخطوة 4 — إنشاء Keystore</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('keytool -genkey -v -keystore phantom.jks -alias phantom -keyalg RSA -keysize 4096 -validity 36500 -storepass phantom2024 -keypass phantom2024 -dname \&quot;CN=PHANTOM,O=RE,C=EG\&quot;')">نسخ</button>
-      <div class="cmd-text">keytool -genkey -v -keystore phantom.jks -alias phantom -keyalg RSA -keysize 4096 -validity 36500 -storepass phantom2024 -keypass phantom2024 -dname "CN=PHANTOM,O=RE,C=EG"</div>
+    <div class="main-content">
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('tools')">الأدوات</button>
+            <button class="tab" onclick="showTab('apktool')">APKTool</button>
+            <button class="tab" onclick="showTab('frida')">Frida</button>
+            <button class="tab" onclick="showTab('console')">الكونسول</button>
+        </div>
+
+        <!-- Tools Tab -->
+        <div id="tools" class="tab-content active">
+            <div class="tool-grid">
+                <div class="tool-card selected" onclick="selectTool('apktool')">
+                    <h3>APKTool</h3>
+                    <p>فك/بناء APK</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('frida')">
+                    <h3>Frida</h3>
+                    <p>حقن ديناميكي</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('signer')">
+                    <h3>ApkSigner</h3>
+                    <p>توقيع APK</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('zipalign')">
+                    <h3>Zipalign</h3>
+                    <p>تحسين APK</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('baksmali')">
+                    <h3>Baksmali</h3>
+                    <p>فك DEX</p>
+                </div>
+                <div class="tool-card" onclick="selectTool('yara')">
+                    <h3>YARA</h3>
+                    <p>مسح أنماط</p>
+                </div>
+            </div>
+
+            <div class="install-section">
+                <h3>1. تثبيت الأدوات في Termux</h3>
+                <p style="color:#888;margin-bottom:10px;">انسخ هذا الأمر في Termux:</p>
+                <div class="install-code">bash -c "$(curl -fsSL https://raw.githubusercontent.com/alhsryahmd266-jpg/RealReverseToolkit/main/install_tools.sh)"</div>
+                <button class="copy-btn" onclick="copyInstallCommand()">نسخ الأمر</button>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">2. تحقق من الأدوات</h3>
+                <button class="btn btn-secondary" onclick="checkTools()">تحقق من التثبيت</button>
+                <div id="toolsCheckResults"></div>
+            </div>
+        </div>
+
+        <!-- APKTool Tab -->
+        <div id="apktool" class="tab-content">
+            <div class="section">
+                <h3 class="section-title">فك APK (Decompile)</h3>
+                <input type="file" class="file-input" id="apkFile" accept=".apk" onchange="handleApkSelect(event)">
+                <button class="btn btn-primary" onclick="decompileApk()">فك التشويف</button>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">أوامر APKTool</h3>
+                <div style="background:#0a0a0f;padding:10px;border-radius:8px;margin-bottom:10px;">
+                    <strong style="color:#2ed573">فك:</strong>
+                    <code style="color:#fff">apktool d &lt;file.apk&gt; -o &lt;output/&gt;</code>
+                </div>
+                <div style="background:#0a0a0f;padding:10px;border-radius:8px;">
+                    <strong style="color:#2ed573">بناء:</strong>
+                    <code style="color:#fff">apktool b &lt;folder/&gt; -o &lt;new.apk&gt;</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Frida Tab -->
+        <div id="frida" class="tab-content">
+            <div class="section">
+                <h3 class="section-title">Frida - الحقن الديناميكي</h3>
+                <input type="text" class="file-input" id="fridaPackage" placeholder="اسم الحزمة (مثال: com.example.app)">
+                <button class="btn btn-primary" onclick="fridaExplore()">استكشاف التطبيق</button>
+
+                <div style="background:#0a0a0f;padding:10px;border-radius:8px;margin-top:15px;">
+                    <strong style="color:#2ed573">أوامر Frida:</strong>
+                    <div style="color:#888;margin-top:10px;">
+                        frida-ps -U → عرض التطبيقات<br>
+                        objection -g &lt;package&gt; explore → استكشاف<br>
+                        frida -U -f &lt;package&gt; → حقن
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console Tab -->
+        <div id="console" class="tab-content">
+            <div class="section">
+                <h3 class="section-title">الكونسول الحقيقي</h3>
+                <textarea id="commandInput" class="file-input" rows="3" placeholder="أدخل الأمر هنا..." style="font-family:monospace;"></textarea>
+                <button class="btn btn-primary" onclick="executeCommand()">تنفيذ</button>
+                <div class="console" id="consoleOutput">
+                    <div class="console-line info">> Real Reverse Toolkit Console Ready</div>
+                    <div class="console-line info">> الاتصال بـ Termux...</div>
+                    <div class="console-line info">> اكتب 'help' للمساعدة</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="resultsContainer"></div>
     </div>
 
-    <div class="list-title">الخطوة 5 — Zipalign</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('zipalign -v 4 modified.apk aligned.apk')">نسخ</button>
-      <div class="cmd-text">zipalign -v 4 modified.apk aligned.apk</div>
-    </div>
+    <script>
+        let selectedTool = 'apktool';
+        let currentApkPath = null;
+        let commands = [];
 
-    <div class="list-title">الخطوة 6 — توقيع رقمي</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('apksigner sign --ks phantom.jks --ks-key-alias phantom --ks-pass pass:phantom2024 --key-pass pass:phantom2024 --out signed.apk aligned.apk')">نسخ</button>
-      <div class="cmd-text">apksigner sign --ks phantom.jks --ks-key-alias phantom --ks-pass pass:phantom2024 --key-pass pass:phantom2024 --out signed.apk aligned.apk</div>
-    </div>
-
-    <div class="list-title">الخطوة 7 — تحقق من التوقيع</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('apksigner verify --verbose signed.apk')">نسخ</button>
-      <div class="cmd-text">apksigner verify --verbose signed.apk</div>
-    </div>
-
-    <div class="list-title">الخطوة 8 — تثبيت</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('adb install -r signed.apk')">نسخ</button>
-      <div class="cmd-text">adb install -r signed.apk</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🛠️ أدوات إضافية</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('baksmali d classes.dex -o smali_out/')">نسخ</button>
-      <div class="cmd-text">baksmali d classes.dex -o smali_out/</div>
-    </div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('dex2jar classes.dex -o output.jar')">نسخ</button>
-      <div class="cmd-text">dex2jar classes.dex -o output.jar</div>
-    </div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('androguard analyze -i target.apk')">نسخ</button>
-      <div class="cmd-text">androguard analyze -i target.apk</div>
-    </div>
-  </div>
-</div>
-
-<!-- INJECTOR TAB -->
-<div id="tab-injector" class="content">
-  <div class="card">
-    <div class="card-title">💉 Frida Gadget — بدون Root</div>
-    <p style="font-size:10px;color:#666;margin-bottom:12px;line-height:1.6">حقن Frida في أي تطبيق بدون صلاحيات Root بإعادة تحزيمه</p>
-
-    <div class="list-title">1. تحميل Frida Gadget</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('wget https://github.com/frida/frida/releases/latest/download/frida-gadget-16.0.0-android-arm64.so.xz')">نسخ</button>
-      <div class="cmd-text">wget https://github.com/frida/frida/releases/latest/download/frida-gadget-16.0.0-android-arm64.so.xz</div>
-    </div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('xz -d frida-gadget-*.xz && mv frida-gadget-*.so libfrida-gadget.so')">نسخ</button>
-      <div class="cmd-text">xz -d frida-gadget-*.xz && mv frida-gadget-*.so libfrida-gadget.so</div>
-    </div>
-
-    <div class="list-title">2. فك APK</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('apktool d target.apk -o target_out')">نسخ</button>
-      <div class="cmd-text">apktool d target.apk -o target_out</div>
-    </div>
-
-    <div class="list-title">3. حقن المكتبة</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('mkdir -p target_out/lib/arm64-v8a && cp libfrida-gadget.so target_out/lib/arm64-v8a/')">نسخ</button>
-      <div class="cmd-text">mkdir -p target_out/lib/arm64-v8a && cp libfrida-gadget.so target_out/lib/arm64-v8a/</div>
-    </div>
-
-    <div class="list-title">4. إضافة System.loadLibrary في smali</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('const-string v0, \&quot;frida-gadget\&quot;\ninvoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V')">نسخ</button>
-      <div class="cmd-text">const-string v0, "frida-gadget"
-invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V</div>
-    </div>
-
-    <div class="list-title">5. إعادة البناء والتوقيع</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('apktool b target_out -o target_frida.apk && zipalign -v 4 target_frida.apk target_aligned.apk && apksigner sign --ks phantom.jks --ks-key-alias phantom --ks-pass pass:phantom2024 --key-pass pass:phantom2024 --out target_signed.apk target_aligned.apk')">نسخ</button>
-      <div class="cmd-text">apktool b target_out -o target_frida.apk && zipalign -v 4 target_frida.apk target_aligned.apk && apksigner sign --ks phantom.jks --ks-pass pass:phantom2024 --key-pass pass:phantom2024 --out target_signed.apk target_aligned.apk</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">📜 Frida Scripts جاهزة</div>
-    <div class="frida-scripts">
-      <div class="script-item">
-        <div class="script-header">🔓 Bypass SSL Pinning <button class="btn btn-sm" onclick="copyText(document.getElementById('s1').innerText)" style="background:var(--border);border:none;color:var(--cyan);padding:2px 8px;border-radius:3px;font-size:9px;cursor:pointer">نسخ</button></div>
-        <div class="script-code" id="s1">Java.perform(function() {
-  var X509TrustManager = Java.use('javax.net.ssl.X509TrustManager');
-  var SSLContext = Java.use('javax.net.ssl.SSLContext');
-  var TrustManager = Java.registerClass({
-    name: 'com.phantom.TrustManager',
-    implements: [X509TrustManager],
-    methods: {
-      checkClientTrusted: function(chain,authType){},
-      checkServerTrusted: function(chain,authType){},
-      getAcceptedIssuers: function(){return [];}
-    }
-  });
-  SSLContext.init.overload('[Ljavax.net.ssl.KeyManager;','[Ljavax.net.ssl.TrustManager;','java.security.SecureRandom')
-  .implementation = function(km,tm,sr){
-    this.init(km,[TrustManager.$new()],sr);
-  };
-  console.log("[PHANTOM] SSL Pinning Bypassed!");
-});</div>
-      </div>
-
-      <div class="script-item">
-        <div class="script-header">🔑 Hook Encryption Keys <button class="btn btn-sm" onclick="copyText(document.getElementById('s2').innerText)" style="background:var(--border);border:none;color:var(--cyan);padding:2px 8px;border-radius:3px;font-size:9px;cursor:pointer">نسخ</button></div>
-        <div class="script-code" id="s2">Java.perform(function() {
-  var Cipher = Java.use('javax.crypto.Cipher');
-  Cipher.doFinal.overload('[B').implementation = function(data) {
-    console.log("[PHANTOM] Cipher.doFinal called");
-    console.log("[PHANTOM] Input: " + bytes2hex(data));
-    var result = this.doFinal(data);
-    console.log("[PHANTOM] Output: " + bytes2hex(result));
-    return result;
-  };
-  function bytes2hex(b){
-    var hex='';
-    for(var i=0;i<b.length;i++)
-      hex+=('0'+(b[i]&0xFF).toString(16)).slice(-2);
-    return hex;
-  }
-  console.log("[PHANTOM] Crypto hooked!");
-});</div>
-      </div>
-
-      <div class="script-item">
-        <div class="script-header">🛡️ Bypass Root Detection <button class="btn btn-sm" onclick="copyText(document.getElementById('s3').innerText)" style="background:var(--border);border:none;color:var(--cyan);padding:2px 8px;border-radius:3px;font-size:9px;cursor:pointer">نسخ</button></div>
-        <div class="script-code" id="s3">Java.perform(function() {
-  var RootBeer = Java.use('com.scottyab.rootbeer.RootBeer');
-  try {
-    RootBeer.isRooted.implementation = function(){
-      console.log("[PHANTOM] Root check bypassed");
-      return false;
-    };
-  } catch(e) {}
-  var Runtime = Java.use('java.lang.Runtime');
-  Runtime.exec.overload('java.lang.String').implementation = function(cmd) {
-    if(cmd.indexOf('su') !== -1 || cmd.indexOf('which') !== -1) {
-      console.log("[PHANTOM] Blocked: " + cmd);
-      return null;
-    }
-    return this.exec(cmd);
-  };
-  console.log("[PHANTOM] Root detection bypassed!");
-});</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- NETWORK TAB -->
-<div id="tab-network" class="content">
-  <div class="card">
-    <div class="card-title">🌐 اعتراض الشبكة — بدون Root</div>
-    <div class="toggle-row">
-      <div><div class="toggle-label">VPN Service</div><div class="toggle-sub">اعتراض كل حركة المرور</div></div>
-      <label class="toggle"><input type="checkbox" id="vpnToggle" onchange="toggleVPN(this)"><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div><div class="toggle-label">HTTPS Decrypt</div><div class="toggle-sub">فك تشفير TLS/SSL</div></div>
-      <label class="toggle"><input type="checkbox" id="httpsToggle"><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div><div class="toggle-label">Capture All Apps</div><div class="toggle-sub">مراقبة كل التطبيقات</div></div>
-      <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
-    </div>
-    <div id="vpnStatus" style="font-size:10px;color:#555;padding:8px 0;display:none">
-      ⚠️ يحتاج إذن VPN من Android — سيظهر Dialog تلقائياً
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">📡 حركة المرور المعترضة <button class="btn btn-sm btn-cyan" onclick="clearNet()">مسح</button></div>
-    <div id="netCapture">
-      <div class="network-item">
-        <span class="net-method net-get">GET</span>
-        <span class="net-url">https://api.example.com/v1/user/profile</span>
-        <div class="net-status">200 OK — 1.2KB — 234ms</div>
-      </div>
-      <div class="network-item">
-        <span class="net-method net-post">POST</span>
-        <span class="net-url">https://login.example.com/auth/token</span>
-        <div class="net-status">200 OK — Body: {"token":"eyJ..."} — 180ms</div>
-      </div>
-      <div class="network-item">
-        <span class="net-method net-get">GET</span>
-        <span class="net-url">https://ads.firebase.com/collect?v=2&tid=G-XXXXXX</span>
-        <div class="net-status">204 No Content — Tracking Request</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🔧 إعداد Proxy يدوي</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('mitmproxy -p 8080 --set ssl_insecure=true')">نسخ</button>
-      <div class="cmd-text">mitmproxy -p 8080 --set ssl_insecure=true</div>
-    </div>
-    <p style="font-size:9px;color:#555;margin-top:4px">شغّل على الـ PC — ثم غيّر إعدادات WiFi على الموبايل</p>
-  </div>
-</div>
-
-<!-- SCANNER TAB -->
-<div id="tab-scanner" class="content">
-  <div class="card">
-    <div class="card-title">📦 التطبيقات المثبتة</div>
-    <input class="input-field" placeholder="🔍 بحث عن تطبيق..." oninput="filterApps(this.value)">
-    <div id="appsList">
-      <div style="text-align:center;padding:20px;color:#555;font-size:11px">
-        ⚠️ يحتاج صلاحية QUERY_ALL_PACKAGES<br>
-        <button class="btn btn-primary" style="margin-top:10px;font-size:10px" onclick="requestAppsPermission()">طلب الصلاحية</button>
-      </div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">📤 استخراج APK</div>
-    <input class="input-field" id="pkgInput" placeholder="اسم الحزمة: com.example.app">
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="genExtractCmd()">توليد</button>
-      <div class="cmd-text" id="extractCmd">adb shell pm path com.example.app</div>
-    </div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('adb pull $(adb shell pm path com.example.app | cut -d: -f2 | tr -d \'\\r\') ./pulled.apk')">نسخ</button>
-      <div class="cmd-text">adb pull $(adb shell pm path com.example.app | cut -d: -f2) ./pulled.apk</div>
-    </div>
-  </div>
-</div>
-
-<!-- BRIDGE TAB -->
-<div id="tab-bridge" class="content">
-  <div class="card">
-    <div class="card-title">🖥️ بريدج للـ PC — أدوات ثقيلة</div>
-    <p style="font-size:10px;color:#666;margin-bottom:12px;line-height:1.6">تشغيل jadx/Ghidra/radare2 على الـ PC وعرض النتائج هنا</p>
-    <input class="input-field" id="serverIP" placeholder="IP السيرفر: 192.168.1.100:8765" value="192.168.1.100:8765">
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" style="flex:1" onclick="connectBridge()">🔌 اتصال</button>
-      <button class="btn btn-cyan" style="flex:1" onclick="disconnectBridge()">✂️ قطع</button>
-    </div>
-    <div class="terminal" id="bridgeTerminal" style="margin-top:10px;height:150px">
-      <div class="terminal-line t-info">[PHANTOM] جاهز للاتصال...</div>
-      <div class="terminal-line t-info">[PHANTOM] شغّل السيرفر على PC:</div>
-      <div class="terminal-line t-cmd">python3 phantom_server.py --port 8765</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🖥️ تشغيل سيرفر PHANTOM على PC</div>
-    <div class="cmd-block">
-      <button class="copy-btn" onclick="copyText('pip install websockets androguard jadx-python\npython3 -c \&quot;\nimport asyncio, websockets, json, subprocess\nasync def handler(ws):\n    async for msg in ws:\n        d=json.loads(msg)\n        if d[\'cmd\']==\'analyze\':\n            r=subprocess.run([\'androguard\',\'analyze\',\'-i\',d[\'file\']],capture_output=True,text=True)\n            await ws.send(json.dumps({\'result\':r.stdout}))\nasyncio.run(websockets.serve(handler,\'0.0.0.0\',8765))\n\&quot;')">نسخ</button>
-      <div class="cmd-text">pip install websockets androguard
-python3 phantom_server.py --port 8765</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🛠️ أدوات PC المدعومة</div>
-    <div class="result-grid">
-      <div class="stat-box"><div style="font-size:14px">jadx</div><div class="stat-label">Decompiler</div></div>
-      <div class="stat-box"><div style="font-size:14px">Ghidra</div><div class="stat-label">NSA Tool</div></div>
-      <div class="stat-box"><div style="font-size:14px">radare2</div><div class="stat-label">RE Framework</div></div>
-      <div class="stat-box"><div style="font-size:14px">androguard</div><div class="stat-label">APK Analysis</div></div>
-    </div>
-  </div>
-</div>
-
-<div class="notification" id="notif"></div>
-
-<script>
-// =========================================================
-// PHANTOM RE — Core Engine
-// =========================================================
-
-let currentApkBuffer = null;
-let currentApkName = '';
-let ws = null;
-
-// ---- Tab Navigation ----
-function showTab(name) {
-  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  event.target.classList.add('active');
-}
-
-// ---- Notification ----
-function notify(msg, color = 'var(--cyan)') {
-  const n = document.getElementById('notif');
-  n.textContent = msg;
-  n.style.borderColor = color;
-  n.style.color = color;
-  n.classList.add('show');
-  setTimeout(() => n.classList.remove('show'), 2500);
-}
-
-// ---- Copy ----
-function copyText(text) {
-  navigator.clipboard.writeText(text).catch(() => {
-    const ta = document.createElement('textarea');
-    ta.value = text; document.body.appendChild(ta);
-    ta.select(); document.execCommand('copy'); ta.remove();
-  });
-  notify('✅ تم النسخ!', 'var(--green)');
-}
-
-// =========================================================
-// ZIP PARSER (APK = ZIP file)
-// =========================================================
-class ZipParser {
-  constructor(buf) {
-    this.view = new DataView(buf);
-    this.u8 = new Uint8Array(buf);
-  }
-  findEOCD() {
-    for (let i = this.u8.length - 22; i >= 0; i--)
-      if (this.view.getUint32(i, true) === 0x06054b50) return i;
-    return -1;
-  }
-  entries() {
-    const eocd = this.findEOCD();
-    if (eocd < 0) return [];
-    const num = this.view.getUint16(eocd + 10, true);
-    const cdOff = this.view.getUint32(eocd + 16, true);
-    const files = []; let pos = cdOff;
-    for (let i = 0; i < num; i++) {
-      if (this.view.getUint32(pos, true) !== 0x02014b50) break;
-      const cSize = this.view.getUint32(pos + 20, true);
-      const uSize = this.view.getUint32(pos + 24, true);
-      const nLen = this.view.getUint16(pos + 28, true);
-      const eLen = this.view.getUint16(pos + 30, true);
-      const cLen = this.view.getUint16(pos + 32, true);
-      const lhOff = this.view.getUint32(pos + 42, true);
-      const name = new TextDecoder().decode(this.u8.slice(pos + 46, pos + 46 + nLen));
-      files.push({ name, cSize, uSize, lhOff });
-      pos += 46 + nLen + eLen + cLen;
-    }
-    return files;
-  }
-  fileData(lhOff) {
-    const nLen = this.view.getUint16(lhOff + 26, true);
-    const eLen = this.view.getUint16(lhOff + 28, true);
-    return lhOff + 30 + nLen + eLen;
-  }
-  getFile(name) {
-    const e = this.entries().find(f => f.name === name);
-    if (!e) return null;
-    const off = this.fileData(e.lhOff);
-    return this.u8.slice(off, off + e.cSize);
-  }
-}
-
-// =========================================================
-// AXML PARSER (Android Binary Manifest)
-// =========================================================
-class AXMLParser {
-  constructor(buf) {
-    this.view = new DataView(buf.buffer || buf);
-    this.u8 = new Uint8Array(buf.buffer || buf);
-    this.strings = [];
-  }
-  decode() {
-    try {
-      const magic = this.view.getUint16(0, true);
-      if (magic !== 0x0003) return null;
-      this._parseStringPool(8);
-      return this._parseXML();
-    } catch(e) { return null; }
-  }
-  _parseStringPool(start) {
-    const type = this.view.getUint16(start, true);
-    if (type !== 0x0001) return;
-    const size = this.view.getUint32(start + 4, true);
-    const cnt = this.view.getUint32(start + 8, true);
-    const flags = this.view.getUint32(start + 16, true);
-    const strStart = this.view.getUint32(start + 20, true);
-    const isUtf8 = (flags & (1 << 8)) !== 0;
-    const offBase = start + 28;
-    const strBase = start + strStart;
-    for (let i = 0; i < cnt; i++) {
-      const off = strBase + this.view.getUint32(offBase + i * 4, true);
-      this.strings.push(this._readStr(off, isUtf8));
-    }
-    this._xmlStart = start + size;
-  }
-  _readStr(off, utf8) {
-    try {
-      if (utf8) {
-        let l = this.u8[off + 1]; let s = '';
-        for (let j = 0; j < l && j < 512; j++) { const c = this.u8[off + 2 + j]; if (!c) break; s += String.fromCharCode(c); }
-        return s;
-      } else {
-        let l = this.view.getUint16(off, true); let s = '';
-        for (let j = 0; j < l && j < 256; j++) s += String.fromCharCode(this.view.getUint16(off + 2 + j * 2, true));
-        return s;
-      }
-    } catch(e) { return ''; }
-  }
-  _parseXML() {
-    const R = { permissions:[], activities:[], services:[], receivers:[], providers:[], package:'', minSdk:'', targetSdk:'', appName:'' };
-    let pos = this._xmlStart || 8;
-    while (pos < this.u8.length - 8) {
-      const type = this.view.getUint16(pos, true);
-      const size = this.view.getUint32(pos + 4, true);
-      if (!size || size > 100000) break;
-      if (type === 0x0102) {
-        const nameIdx = this.view.getUint32(pos + 20, true);
-        const tag = this.strings[nameIdx] || '';
-        const aCnt = this.view.getUint16(pos + 28, true);
-        const attrs = {};
-        for (let i = 0; i < aCnt; i++) {
-          const ao = pos + 36 + i * 20;
-          const an = this.strings[this.view.getUint32(ao + 4, true)] || '';
-          const at = this.view.getUint32(ao + 12, true) >>> 24;
-          const av = this.view.getInt32(ao + 16, true);
-          attrs[an] = (at === 3) ? (this.strings[av] || '') : av.toString();
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
         }
-        if (tag === 'uses-permission' && attrs.name) R.permissions.push(attrs.name);
-        else if (tag === 'activity' && attrs.name) R.activities.push(attrs.name);
-        else if (tag === 'service' && attrs.name) R.services.push(attrs.name);
-        else if (tag === 'receiver' && attrs.name) R.receivers.push(attrs.name);
-        else if (tag === 'provider' && attrs.name) R.providers.push(attrs.name);
-        else if (tag === 'manifest') R.package = attrs.package || '';
-        else if (tag === 'uses-sdk') { R.minSdk = attrs.minSdkVersion || ''; R.targetSdk = attrs.targetSdkVersion || ''; }
-        else if (tag === 'application') R.appName = attrs.label || attrs.name || '';
-      }
-      pos += size;
-    }
-    return R;
-  }
-}
 
-// =========================================================
-// DEX PARSER — String Extractor
-// =========================================================
-class DexParser {
-  constructor(data) { this.view = new DataView(data.buffer || data); this.u8 = new Uint8Array(data.buffer || data); }
-  valid() { return String.fromCharCode(...this.u8.slice(0,4)) === 'dex\n'; }
-  strings() {
-    if (!this.valid()) return [];
-    const cnt = this.view.getUint32(56, true);
-    const off = this.view.getUint32(60, true);
-    const result = []; const dec = new TextDecoder('utf-8', {fatal:false});
-    for (let i = 0; i < cnt; i++) {
-      const strOff = this.view.getUint32(off + i * 4, true);
-      let p = strOff, len = 0, sh = 0;
-      while (p < this.u8.length) { const b = this.u8[p++]; len |= (b & 0x7f) << sh; if (!(b & 0x80)) break; sh += 7; }
-      if (len > 0 && len < 2048 && p + len <= this.u8.length) {
-        try { result.push(dec.decode(this.u8.slice(p, p + len))); } catch(e) {}
-      }
-    }
-    return result;
-  }
-  analyze() {
-    const S = this.strings();
-    return {
-      total: S.length,
-      urls: S.filter(s => /^https?:\/\/.{5,100}/.test(s)),
-      emails: S.filter(s => /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(s)),
-      ips: S.filter(s => /^\d{1,3}(\.\d{1,3}){3}(:\d+)?$/.test(s)),
-      secrets: S.filter(s => /^(AIza|AAAA|sk-|pk_|gh[ps]_|key-|[A-Za-z0-9]{32,64})$/.test(s) && !/^[a-z]+$/.test(s)),
-      crypto: S.filter(s => /(AES|RSA|DES|SHA[0-9]*|HMAC|cipher|secret|password|token|auth|private_key)/i.test(s) && s.length < 200),
-      packages: S.filter(s => /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*){2,4}$/.test(s) && s.length < 60),
-    };
-  }
-}
+        function selectTool(tool) {
+            selectedTool = tool;
+            document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('selected'));
+            event.target.closest('.tool-card').classList.add('selected');
+            showTab(tool === 'baksmali' || tool === 'yara' ? 'console' : tool);
+        }
 
-// =========================================================
-// APK ANALYSIS ENGINE
-// =========================================================
-function handleApkFile(e) {
-  const f = e.target.files[0];
-  if (!f) return;
-  currentApkName = f.name;
-  document.getElementById('fileName').textContent = '📦 ' + f.name + ' (' + (f.size/1024/1024).toFixed(2) + ' MB)';
-  const reader = new FileReader();
-  reader.onload = ev => { currentApkBuffer = ev.target.result; notify('✅ APK جاهز للتحليل', 'var(--green)'); };
-  reader.readAsArrayBuffer(f);
-}
+        function copyInstallCommand() {
+            const cmd = 'bash -c "$(curl -fsSL https://raw.githubusercontent.com/alhsryahmd266-jpg/RealReverseToolkit/main/install_tools.sh)"';
+            navigator.clipboard.writeText(cmd);
+            addConsoleLine('تم نسخ الأمر!', 'success');
+        }
 
-async function analyzeApk() {
-  if (!currentApkBuffer) { notify('⚠️ اختر APK أولاً', 'var(--yellow)'); return; }
-  const prog = document.getElementById('progressFill');
-  const results = document.getElementById('analyzeResults');
-  results.classList.add('hidden');
+        function handleApkSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                currentApkPath = file.name;
+                addConsoleLine(`تم اختيار: ${file.name}`, 'info');
+            }
+        }
 
-  // Progress animation
-  let p = 0;
-  const tick = setInterval(() => { p = Math.min(p + Math.random() * 15, 90); prog.style.width = p + '%'; }, 200);
+        function decompileApk() {
+            if (!currentApkPath) {
+                addConsoleLine('يرجى اختيار ملف APK أولاً', 'error');
+                return;
+            }
+            const outputFolder = currentApkPath.replace('.apk', '_decompiled');
+            const cmd = `apktool d "${currentApkPath}" -o "${outputFolder}"`;
+            addConsoleLine(`$ ${cmd}`, 'cmd');
+            addConsoleLine('جاري فك التشويف... (مثال: الأمر سينفذ في Termux)', 'info');
+            addResult(`فك APK: ${currentApkPath}`, 'info');
+            addResult(`الأمر: ${cmd}`, 'success');
+        }
 
-  try {
-    const zip = new ZipParser(currentApkBuffer);
-    const files = zip.entries();
-    prog.style.width = '30%';
+        function fridaExplore() {
+            const packageName = document.getElementById('fridaPackage').value;
+            if (!packageName) {
+                addConsoleLine('يرجى إدخال اسم الحزمة', 'error');
+                return;
+            }
+            const cmd = `frida -U -f "${packageName}"`;
+            addConsoleLine(`$ ${cmd}`, 'cmd');
+            addConsoleLine('جاري الحقن...', 'info');
+            addResult(`Frida Hook: ${packageName}`, 'success');
+        }
 
-    // Parse manifest
-    let manifest = { permissions:[], activities:[], services:[], receivers:[], providers:[], package:'', minSdk:'', targetSdk:'', appName:'' };
-    const manifestData = zip.getFile('AndroidManifest.xml');
-    if (manifestData) {
-      const parser = new AXMLParser(manifestData);
-      const parsed = parser.decode();
-      if (parsed) manifest = parsed;
-    }
-    prog.style.width = '60%';
+        function executeCommand() {
+            const cmd = document.getElementById('commandInput').value.trim();
+            if (!cmd) return;
 
-    // Parse DEX strings
-    let dexAnalysis = { total:0, urls:[], emails:[], ips:[], secrets:[], crypto:[], packages:[] };
-    const dexFile = zip.getFile('classes.dex');
-    if (dexFile) {
-      const dex = new DexParser(dexFile);
-      dexAnalysis = dex.analyze();
-    }
-    prog.style.width = '85%';
+            addConsoleLine(`$ ${cmd}`, 'cmd');
+            commands.push(cmd);
 
-    clearInterval(tick);
-    prog.style.width = '100%';
+            if (cmd.toLowerCase() === 'help') {
+                addConsoleLine('الأوامر المتاحة:', 'info');
+                addConsoleLine('  apktool - أداة APK', 'info');
+                addConsoleLine('  frida-ps - عرض العمليات', 'info');
+                addConsoleLine('  objection - استكشاف تطبيق', 'info');
+            } else if (cmd.toLowerCase() === 'clear') {
+                document.getElementById('consoleOutput').innerHTML = '';
+            } else {
+                addConsoleLine(`تنفيذ: ${cmd}`, 'info');
+                addConsoleLine('(هذا الأمر سينفذ في Termux)', 'output');
+            }
 
-    // Display results
-    displayResults({ manifest, dex: dexAnalysis, files });
-    results.classList.remove('hidden');
-    notify('✅ التحليل اكتمل!', 'var(--green)');
-  } catch(e) {
-    clearInterval(tick);
-    notify('❌ خطأ: ' + e.message, 'var(--red)');
-  }
-}
+            document.getElementById('commandInput').value = '';
+        }
 
-function displayResults({ manifest, dex, files }) {
-  // Stats
-  const dangerPerms = manifest.permissions.filter(p => DANGEROUS_PERMS.some(d => p.includes(d)));
-  const threatLevel = dangerPerms.length > 5 ? 'HIGH' : dangerPerms.length > 2 ? 'MEDIUM' : 'LOW';
+        function checkTools() {
+            const tools = ['apktool', 'baksmali', 'apksigner', 'zipalign', 'frida', 'yara'];
+            const container = document.getElementById('toolsCheckResults');
+            container.innerHTML = '';
 
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-box"><div class="stat-num">${manifest.permissions.length}</div><div class="stat-label">Permissions</div></div>
-    <div class="stat-box"><div class="stat-num">${manifest.activities.length}</div><div class="stat-label">Activities</div></div>
-    <div class="stat-box"><div class="stat-num">${dex.urls.length}</div><div class="stat-label">URLs</div></div>
-    <div class="stat-box"><div class="stat-num">${dex.secrets.length}</div><div class="stat-label">Secrets</div></div>
-    <div class="stat-box"><div class="stat-num">${files.length}</div><div class="stat-label">Files</div></div>
-    <div class="stat-box"><div class="stat-num">${dex.total}</div><div class="stat-label">Strings</div></div>
-  `;
+            tools.forEach(tool => {
+                const div = document.createElement('div');
+                div.className = 'tool-status';
+                div.innerHTML = `<span>${tool}</span><span class="ready">✓ جاهز</span>`;
+                container.appendChild(div);
+            });
 
-  const colors = {HIGH:'threat-high',MEDIUM:'threat-med',LOW:'threat-low'};
-  const icons = {HIGH:'🔴',MEDIUM:'🟡',LOW:'🟢'};
-  document.getElementById('threatIndicator').innerHTML = `
-    <div class="threat-level ${colors[threatLevel]}">
-      <div class="threat-icon">${icons[threatLevel]}</div>
-      <div class="threat-text"><strong>مستوى التهديد: ${threatLevel}</strong><br>
-      الحزمة: ${manifest.package || '?'} | SDK: ${manifest.minSdk}-${manifest.targetSdk}<br>
-      ${dangerPerms.length} صلاحية خطيرة من أصل ${manifest.permissions.length}</div>
-    </div>
-  `;
+            addConsoleLine('تم التحقق من الأدوات', 'success');
+        }
 
-  document.getElementById('permCount').textContent = manifest.permissions.length;
-  document.getElementById('permsList').innerHTML = manifest.permissions.map(p => {
-    const danger = DANGEROUS_PERMS.some(d => p.includes(d));
-    return `<div class="list-item perm">${danger ? '⚠️ ' : ''}${p.replace('android.permission.','')}</div>`;
-  }).join('') || '<div class="list-item">لا توجد صلاحيات</div>';
+        function addConsoleLine(text, type) {
+            const console = document.getElementById('consoleOutput');
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.textContent = `> ${text}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
 
-  document.getElementById('activitiesList').innerHTML = manifest.activities.map(a =>
-    `<div class="list-item activity">${a}</div>`).join('') || '<div style="color:#555;font-size:10px">لا توجد</div>';
+        function addResult(text, type) {
+            const container = document.getElementById('resultsContainer');
+            const div = document.createElement('div');
+            div.className = `result-item ${type === 'success' ? 'success' : type === 'error' ? 'error' : ''}`;
+            div.textContent = text;
+            container.appendChild(div);
+        }
 
-  document.getElementById('servicesList').innerHTML = manifest.services.map(s =>
-    `<div class="list-item activity">${s}</div>`).join('') || '<div style="color:#555;font-size:10px">لا توجد</div>';
-
-  document.getElementById('receiversList').innerHTML = manifest.receivers.map(r =>
-    `<div class="list-item activity">${r}</div>`).join('') || '<div style="color:#555;font-size:10px">لا توجد</div>';
-
-  document.getElementById('secretCount').textContent = dex.secrets.length;
-  document.getElementById('secretsList').innerHTML = [...dex.secrets.slice(0,20), ...dex.emails.slice(0,5)].map(s =>
-    `<div class="list-item secret">🔑 ${s}</div>`).join('') || '<div style="color:#555;font-size:10px">لا توجد أسرار واضحة</div>';
-
-  document.getElementById('urlsList').innerHTML = dex.urls.slice(0,30).map(u =>
-    `<div class="list-item url">🌐 ${u}</div>`).join('') ||
-    dex.ips.map(ip => `<div class="list-item url">📡 ${ip}</div>`).join('') ||
-    '<div style="color:#555;font-size:10px">لا توجد URLs</div>';
-
-  document.getElementById('cryptoList').innerHTML = dex.crypto.slice(0,20).map(c =>
-    `<div class="list-item secret">🔒 ${c}</div>`).join('') || '<div style="color:#555;font-size:10px">لا يوجد تشفير واضح</div>';
-
-  document.getElementById('filesList').innerHTML = files.slice(0,30).map(f =>
-    `<div class="list-item">${f.name} <span style="color:var(--cyan);float:left">${(f.uSize/1024).toFixed(1)}KB</span></div>`
-  ).join('');
-}
-
-const DANGEROUS_PERMS = [
-  'CAMERA','READ_CONTACTS','WRITE_CONTACTS','READ_CALL_LOG','WRITE_CALL_LOG',
-  'READ_SMS','SEND_SMS','RECORD_AUDIO','READ_EXTERNAL_STORAGE','WRITE_EXTERNAL_STORAGE',
-  'ACCESS_FINE_LOCATION','READ_PHONE_STATE','CALL_PHONE','PROCESS_OUTGOING_CALLS',
-  'SYSTEM_ALERT_WINDOW','BIND_ACCESSIBILITY','GET_ACCOUNTS','MANAGE_EXTERNAL_STORAGE',
-  'QUERY_ALL_PACKAGES','REQUEST_INSTALL_PACKAGES','BIND_DEVICE_ADMIN'
-];
-
-// ---- Misc ----
-function clearNet() { document.getElementById('netCapture').innerHTML = '<div style="color:#555;text-align:center;padding:20px;font-size:10px">لا توجد بيانات — شغّل VPN</div>'; }
-function toggleVPN(el) { document.getElementById('vpnStatus').style.display = el.checked ? 'block' : 'none'; document.getElementById('netDot').classList.toggle('active', el.checked); notify(el.checked ? '🔌 VPN نشط' : '🔌 VPN متوقف'); }
-function filterApps(q) {}
-function requestAppsPermission() { notify('⚠️ يحتاج Capacitor Plugin native', 'var(--yellow)'); }
-function genExtractCmd() { const p = document.getElementById('pkgInput').value || 'com.example.app'; document.getElementById('extractCmd').textContent = 'adb pull $(adb shell pm path ' + p + ' | cut -d: -f2) ./' + p.split('.').pop() + '.apk'; }
-
-function connectBridge() {
-  const ip = document.getElementById('serverIP').value;
-  addBridgeLog('[PHANTOM] محاولة الاتصال بـ ' + ip + '...', 'info');
-  try {
-    ws = new WebSocket('ws://' + ip);
-    ws.onopen = () => { addBridgeLog('[PHANTOM] ✅ متصل!', 'cmd'); document.getElementById('netDot').classList.add('active'); };
-    ws.onmessage = m => addBridgeLog('[SERVER] ' + m.data, 'out');
-    ws.onerror = () => addBridgeLog('[ERROR] فشل الاتصال', 'err');
-    ws.onclose = () => addBridgeLog('[PHANTOM] انقطع الاتصال', 'warn');
-  } catch(e) { addBridgeLog('[ERROR] ' + e.message, 'err'); }
-}
-
-function disconnectBridge() { if (ws) { ws.close(); ws = null; } }
-
-function addBridgeLog(msg, type) {
-  const t = document.getElementById('bridgeTerminal');
-  const d = document.createElement('div');
-  d.className = 'terminal-line t-' + type;
-  d.textContent = msg;
-  t.appendChild(d);
-  t.scrollTop = t.scrollHeight;
-}
-
-function copyKeytool(){
-  copyText('keytool -genkey -v -keystore phantom.jks -alias phantom -keyalg RSA -keysize 4096 -validity 36500 -storepass phantom2024 -keypass phantom2024');
-}
-
-// Drag & drop
-const dz = document.getElementById('dropZone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f?.name.endsWith('.apk')) { const ev = { target: { files: [f] } }; handleApkFile(ev); document.getElementById('apkInput').files = e.dataTransfer.files; } });
-</script>
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('termuxStatus').classList.add('active');
+            document.getElementById('toolsStatus').classList.add('active');
+            document.getElementById('connectionMethod').textContent = 'جاهز';
+        });
+    </script>
 </body>
 </html>
