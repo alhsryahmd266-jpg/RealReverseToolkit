@@ -1,19 +1,19 @@
 {
   "name": "real-reverse-toolkit",
   "version": "1.0.0",
-  "description": "PHANTOM RE - Real Reverse Engineering Toolkit",
+  "description": "Real Reverse Engineering Toolkit with Termux Integration",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');console.log('Build OK');\"",
-    "preview": "vite preview"
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:android": "npm run build && npx cap sync android && cd android && chmod +x gradlew && ./gradlew assembleDebug"
   },
-  "dependencies": {
-    "@capacitor/android": "^6.0.0",
-    "@capacitor/core": "^6.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@capacitor/android": "^6.0.0",
     "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
     "vite": "^5.0.0"
   }
 }
