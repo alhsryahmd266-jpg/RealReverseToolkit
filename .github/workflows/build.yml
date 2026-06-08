@@ -47,73 +47,100 @@ jobs:
     - name: Sync Capacitor
       run: npx cap sync android
 
-    - name: Patch AndroidManifest — Add ALL Permissions
+    - name: Write Complete AndroidManifest.xml
       run: |
-        MANIFEST="android/app/src/main/AndroidManifest.xml"
-        python3 - <<'PYEOF'
-        import re
+        cat > android/app/src/main/AndroidManifest.xml << 'MANIFEST_EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-        with open("android/app/src/main/AndroidManifest.xml", "r") as f:
-            content = f.read()
+            <!-- ═══ NETWORK ═══ -->
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
-        permissions = [
-            "android.permission.INTERNET",
-            "android.permission.ACCESS_NETWORK_STATE",
-            "android.permission.ACCESS_WIFI_STATE",
-            "android.permission.READ_EXTERNAL_STORAGE",
-            "android.permission.WRITE_EXTERNAL_STORAGE",
-            "android.permission.MANAGE_EXTERNAL_STORAGE",
-            "android.permission.READ_MEDIA_IMAGES",
-            "android.permission.READ_MEDIA_VIDEO",
-            "android.permission.READ_MEDIA_AUDIO",
-            "android.permission.QUERY_ALL_PACKAGES",
-            "android.permission.REQUEST_INSTALL_PACKAGES",
-            "android.permission.REQUEST_DELETE_PACKAGES",
-            "android.permission.SYSTEM_ALERT_WINDOW",
-            "android.permission.FOREGROUND_SERVICE",
-            "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
-            "android.permission.RECEIVE_BOOT_COMPLETED",
-            "android.permission.CAMERA",
-            "android.permission.RECORD_AUDIO",
-            "android.permission.READ_PHONE_STATE",
-            "android.permission.READ_PHONE_NUMBERS",
-            "android.permission.PACKAGE_USAGE_STATS",
-            "android.permission.BIND_ACCESSIBILITY_SERVICE",
-            "android.permission.VIBRATE",
-            "android.permission.WAKE_LOCK",
-            "android.permission.CHANGE_NETWORK_STATE",
-            "android.permission.CHANGE_WIFI_STATE",
-        ]
+            <!-- ═══ STORAGE ═══ -->
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+            <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+            <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-        perm_lines = "\n".join(
-            f'    <uses-permission android:name="{p}" />' for p in permissions
-        )
+            <!-- ═══ PACKAGE MANAGEMENT ═══ -->
+            <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+            <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+            <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
-        # Also add uses-feature for VPN
-        features = """    <uses-feature android:name="android.software.vpn" android:required="false" />
-            <uses-feature android:name="android.hardware.camera" android:required="false" />"""
+            <!-- ═══ SYSTEM ═══ -->
+            <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+            <uses-permission android:name="android.permission.VIBRATE" />
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-        # Insert after <manifest ...>
-        content = re.sub(
-            r'(<manifest[^>]*>)',
-            r'\1\n' + perm_lines + '\n' + features,
-            content,
-            count=1
-        )
+            <!-- ═══ HARDWARE ═══ -->
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-        # Add android:requestLegacyExternalStorage and other attributes to <application>
-        content = content.replace(
-            'android:label=',
-            'android:label="PHANTOM RE"\n        android:requestLegacyExternalStorage="true"\n        android:usesCleartextTraffic="true"\n        android:networkSecurityConfig="@xml/network_security_config"\n        android:label='
-        )
+            <!-- ═══ PHONE ═══ -->
+            <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+            <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+            <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
 
-        with open("android/app/src/main/AndroidManifest.xml", "w") as f:
-            f.write(content)
+            <!-- ═══ ACCESSIBILITY ═══ -->
+            <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
 
-        print("✅ AndroidManifest.xml patched with all permissions")
-        PYEOF
+            <!-- ═══ FEATURES ═══ -->
+            <uses-feature android:name="android.hardware.camera" android:required="false" />
+            <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+            <uses-feature android:name="android.software.vpn" android:required="false" />
 
-    - name: Create Network Security Config (Allow All Traffic)
+            <application
+                android:allowBackup="true"
+                android:icon="@mipmap/ic_launcher"
+                android:label="PHANTOM RE"
+                android:roundIcon="@mipmap/ic_launcher_round"
+                android:supportsRtl="true"
+                android:theme="@style/AppTheme"
+                android:requestLegacyExternalStorage="true"
+                android:usesCleartextTraffic="true"
+                android:networkSecurityConfig="@xml/network_security_config"
+                android:hardwareAccelerated="true">
+
+                <activity
+                    android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+                    android:exported="true"
+                    android:hardwareAccelerated="true"
+                    android:label="PHANTOM RE"
+                    android:launchMode="singleTask"
+                    android:name="com.getcapacitor.BridgeActivity"
+                    android:windowSoftInputMode="adjustResize">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+                </activity>
+
+                <provider
+                    android:name="androidx.core.content.FileProvider"
+                    android:authorities="${applicationId}.fileprovider"
+                    android:exported="false"
+                    android:grantUriPermissions="true">
+                    <meta-data
+                        android:name="android.support.FILE_PROVIDER_PATHS"
+                        android:resource="@xml/file_paths" />
+                </provider>
+
+            </application>
+        </manifest>
+        MANIFEST_EOF
+        echo "✅ AndroidManifest.xml written"
+        cat android/app/src/main/AndroidManifest.xml | head -5
+
+    - name: Create Network Security Config
       run: |
         mkdir -p android/app/src/main/res/xml
         cat > android/app/src/main/res/xml/network_security_config.xml << 'EOF'
@@ -128,9 +155,27 @@ jobs:
         </network-security-config>
         EOF
 
-    - name: Set App Name & Version
+    - name: Create File Provider Paths
       run: |
-        # Update strings.xml
+        mkdir -p android/app/src/main/res/xml
+        cat > android/app/src/main/res/xml/file_paths.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <paths>
+            <external-path name="external_files" path="." />
+            <files-path name="internal_files" path="." />
+            <cache-path name="cache_files" path="." />
+        </paths>
+        EOF
+
+    - name: Set App Info in build.gradle
+      run: |
+        sed -i 's/applicationId ".*"/applicationId "com.phantomre.toolkit"/' android/app/build.gradle || true
+        sed -i 's/versionCode [0-9]*/versionCode '"$GITHUB_RUN_NUMBER"'/' android/app/build.gradle || true
+        sed -i 's/versionName "[^"]*"/versionName "1.'"$GITHUB_RUN_NUMBER"'.0"/' android/app/build.gradle || true
+        echo "✅ build.gradle updated"
+
+    - name: Update strings.xml
+      run: |
         cat > android/app/src/main/res/values/strings.xml << 'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <resources>
@@ -140,12 +185,8 @@ jobs:
             <string name="custom_url_scheme">phantomre</string>
         </resources>
         EOF
-        # Update build.gradle app id
-        sed -i 's/applicationId ".*"/applicationId "com.phantomre.toolkit"/' android/app/build.gradle || true
-        sed -i 's/versionCode 1/versionCode '"$GITHUB_RUN_NUMBER"'/' android/app/build.gradle || true
-        sed -i 's/versionName "1.0"/versionName "1.'"$GITHUB_RUN_NUMBER"'.0"/' android/app/build.gradle || true
 
-    - name: Generate Release Keystore
+    - name: Generate Release Keystore (RSA-4096)
       run: |
         keytool -genkey -v \
           -keystore phantom-release.jks \
@@ -155,8 +196,8 @@ jobs:
           -validity 36500 \
           -storepass phantom2024RE \
           -keypass phantom2024RE \
-          -dname "CN=PHANTOM RE, OU=Security Research, O=PhantomRE, L=Cairo, ST=Cairo, C=EG"
-        echo "✅ Keystore generated (RSA 4096-bit, valid 100 years)"
+          -dname "CN=PHANTOM RE, OU=Security, O=PhantomRE, L=Cairo, ST=Cairo, C=EG"
+        echo "✅ RSA-4096 Keystore generated (100 years validity)"
 
     - name: Build Release APK
       run: |
@@ -166,12 +207,14 @@ jobs:
           -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/phantom-release.jks \
           -Pandroid.injected.signing.store.password=phantom2024RE \
           -Pandroid.injected.signing.key.alias=phantom \
-          -Pandroid.injected.signing.key.password=phantom2024RE
+          -Pandroid.injected.signing.key.password=phantom2024RE \
+          --no-daemon \
+          --stacktrace
 
     - name: Zipalign APK
       run: |
         APK=$(find android/app/build/outputs/apk/release/ -name "*.apk" | head -1)
-        echo "APK found: $APK"
+        echo "APK: $APK — size: $(ls -lh $APK | awk '{print $5}')"
         $ANDROID_HOME/build-tools/34.0.0/zipalign -v 4 "$APK" PHANTOM-RE-aligned.apk
         echo "✅ Zipalign done"
 
@@ -189,8 +232,11 @@ jobs:
     - name: Verify Signature
       run: |
         $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose PHANTOM-RE-SIGNED.apk
-        echo "✅ Signature verified"
+        echo ""
+        echo "══════════════════════════════════"
+        echo "  PHANTOM RE APK — READY"
         ls -lh PHANTOM-RE-SIGNED.apk
+        echo "══════════════════════════════════"
 
     - name: Upload Signed APK as Artifact
       uses: actions/upload-artifact@v4
@@ -203,26 +249,27 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ github.run_number }}
-        name: "PHANTOM RE v${{ github.run_number }} — موقّع رقمياً"
+        name: "PHANTOM RE v${{ github.run_number }} — موقّع رقمياً RSA-4096"
         body: |
-          ## PHANTOM RE v${{ github.run_number }}
-          منظومة الهندسة العكسية المطلقة
+          ## ⚡ PHANTOM RE v${{ github.run_number }}
+          **أقوى منظومة هندسة عكسية على الإطلاق**
 
           ### المميزات:
-          - 🔬 تحليل APK ستاتيكي كامل (ZIP + AXML + DEX)
-          - ⚡ سير عمل التعديل الكامل (فك ← تعديل ← بناء ← توقيع)
+          - 🔬 تحليل APK ستاتيكي كامل (ZIP + AXML + DEX parsers في JS)
+          - ⚡ سير عمل كامل: فك ← تعديل ← بناء ← توقيع
           - 💉 حقن Frida Gadget بدون Root
-          - 🌐 اعتراض الشبكة عبر VPN
-          - 🖥️ بريدج للـ PC (jadx, Ghidra, radare2)
+          - 🌐 اعتراض HTTPS عبر VPN (بثق شهادات المستخدم)
+          - 🖥️ بريدج PC (jadx, Ghidra, radare2)
+          - 🔒 31 صلاحية Android (QUERY_ALL_PACKAGES, SYSTEM_ALERT_WINDOW...)
 
-          ### التوقيع:
-          - RSA 4096-bit
-          - صلاحية 100 سنة
-          - Verified by apksigner
+          ### التوقيع الرقمي:
+          - **خوارزمية:** RSA 4096-bit
+          - **صلاحية:** 100 سنة
+          - **مُتحقق بـ:** apksigner
 
           ### التثبيت:
-          1. حمّل PHANTOM-RE-SIGNED.apk
-          2. فعّل "مصادر غير معروفة"
+          1. حمّل `PHANTOM-RE-SIGNED.apk`
+          2. فعّل "مصادر غير معروفة" في الإعدادات
           3. ثبّت وشغّل
         files: PHANTOM-RE-SIGNED.apk
         fail_on_unmatched_files: true
