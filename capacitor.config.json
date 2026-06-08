@@ -1,0 +1,8 @@
+{
+  "appId": "com.realreverse.toolkit",
+  "appName": "Real Reverse Toolkit",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
