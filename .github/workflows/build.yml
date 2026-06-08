@@ -25,18 +25,7 @@ jobs:
         java-version: '17'
 
     - name: Setup Android SDK
-      run: |
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
-        echo "sdk.dir=$HOME/android-sdk" >> gradle.properties
-        export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-        yes | sdkmanager --licenses 2>/dev/null || true
-        sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" 2>/dev/null
+      uses: android-actions/setup-android@v3
 
     - name: Install dependencies
       run: npm install
@@ -44,17 +33,21 @@ jobs:
     - name: Build Web App
       run: npm run build
 
+    - name: Add Android Platform
+      run: npx cap add android
+
+    - name: Sync Capacitor
+      run: npx cap sync android
+
     - name: Build APK
-      run: npm run build:android
-      env:
-        ANDROID_HOME: ${{ env.ANDROID_HOME }}
-        ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: RealReverseToolkit
-        path: |
-          android/app/build/outputs/apk/debug/*.apk
-          dist/*.apk
-        retention-days: 7
+        name: RealReverseToolkit-APK
+        path: android/app/build/outputs/apk/debug/*.apk
+        retention-days: 30
