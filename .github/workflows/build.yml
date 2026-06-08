@@ -1,15 +1,13 @@
-name: PHANTOM RE — Build & Sign APK
+name: Build Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
     - name: Checkout
@@ -20,20 +18,25 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Setup Java 17
+    - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-
-    - name: Install Android Build Tools
       run: |
-        sdkmanager "build-tools;34.0.0" "platforms;android-34" "platform-tools" 2>/dev/null || true
-        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_PATH
+        mkdir -p $HOME/android-sdk
+        cd $HOME/android-sdk
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip
+        mkdir -p cmdline-tools/latest
+        mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
+        echo "sdk.dir=$HOME/android-sdk" >> gradle.properties
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+        yes | sdkmanager --licenses 2>/dev/null || true
+        sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" 2>/dev/null
 
     - name: Install dependencies
       run: npm install
@@ -41,193 +44,17 @@ jobs:
     - name: Build Web App
       run: npm run build
 
-    - name: Add Android Platform
-      run: npx cap add android
+    - name: Build APK
+      run: npm run build:android
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
 
-    - name: Sync Capacitor
-      run: npx cap sync android
-
-    - name: Fix applicationId in build.gradle
-      run: |
-        sed -i 's/applicationId "[^"]*"/applicationId "com.phantomre.toolkit"/' android/app/build.gradle
-        grep "applicationId" android/app/build.gradle
-        echo "✅ applicationId = com.phantomre.toolkit"
-
-    - name: Write AndroidManifest.xml (NO FileProvider conflict)
-      run: |
-        cat > android/app/src/main/AndroidManifest.xml << 'MANIFEST_EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- NETWORK -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-
-    <!-- STORAGE -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-
-    <!-- PACKAGES -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
-
-    <!-- OVERLAY — يشتغل فوق التطبيقات -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
-    <!-- SYSTEM -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-
-    <!-- HARDWARE -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <!-- PHONE -->
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
-
-    <!-- FEATURES -->
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-feature android:name="android.software.vpn" android:required="false" />
-
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="PHANTOM RE"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:requestLegacyExternalStorage="true"
-        android:usesCleartextTraffic="true"
-        android:networkSecurityConfig="@xml/network_security_config"
-        android:hardwareAccelerated="true">
-
-        <activity
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-            android:exported="true"
-            android:hardwareAccelerated="true"
-            android:label="PHANTOM RE"
-            android:launchMode="singleTask"
-            android:name="com.getcapacitor.BridgeActivity"
-            android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-    </application>
-</manifest>
-MANIFEST_EOF
-        echo "✅ AndroidManifest.xml written"
-
-    - name: Create Network Security Config
-      run: |
-        mkdir -p android/app/src/main/res/xml
-        cat > android/app/src/main/res/xml/network_security_config.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<network-security-config>
-    <base-config cleartextTrafficPermitted="true">
-        <trust-anchors>
-            <certificates src="system" />
-            <certificates src="user" />
-        </trust-anchors>
-    </base-config>
-</network-security-config>
-EOF
-
-    - name: Update strings.xml
-      run: |
-        cat > android/app/src/main/res/values/strings.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">PHANTOM RE</string>
-    <string name="title_activity_main">PHANTOM RE</string>
-    <string name="package_name">com.phantomre.toolkit</string>
-    <string name="custom_url_scheme">phantomre</string>
-</resources>
-EOF
-
-    - name: Generate Keystore RSA-4096
-      run: |
-        keytool -genkey -v \
-          -keystore phantom-release.jks \
-          -alias phantom \
-          -keyalg RSA \
-          -keysize 4096 \
-          -validity 36500 \
-          -storepass phantom2024RE \
-          -keypass phantom2024RE \
-          -dname "CN=PHANTOM RE, OU=Security, O=PhantomRE, L=Cairo, ST=Cairo, C=EG"
-        echo "✅ RSA-4096 Keystore ready"
-
-    - name: Build Release APK
-      run: |
-        cd android
-        chmod +x gradlew
-        ./gradlew assembleRelease \
-          -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/phantom-release.jks \
-          -Pandroid.injected.signing.store.password=phantom2024RE \
-          -Pandroid.injected.signing.key.alias=phantom \
-          -Pandroid.injected.signing.key.password=phantom2024RE \
-          --no-daemon
-
-    - name: Zipalign + Sign APK
-      run: |
-        APK=$(find android/app/build/outputs/apk/release/ -name "*.apk" | head -1)
-        echo "APK: $APK ($(ls -lh $APK | awk '{print $5}'))"
-        $ANDROID_HOME/build-tools/34.0.0/zipalign -v 4 "$APK" PHANTOM-RE-aligned.apk
-        $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-          --ks phantom-release.jks \
-          --ks-key-alias phantom \
-          --ks-pass pass:phantom2024RE \
-          --key-pass pass:phantom2024RE \
-          --out PHANTOM-RE-SIGNED.apk \
-          PHANTOM-RE-aligned.apk
-        $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose PHANTOM-RE-SIGNED.apk
-        echo "✅ APK signed & verified"
-        ls -lh PHANTOM-RE-SIGNED.apk
-
-    - name: Upload Artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: PHANTOM-RE-v${{ github.run_number }}-SIGNED
-        path: PHANTOM-RE-SIGNED.apk
-        retention-days: 30
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: v${{ github.run_number }}
-        name: "PHANTOM RE v${{ github.run_number }} — موقّع RSA-4096"
-        body: |
-          ## PHANTOM RE v${{ github.run_number }}
-
-          ### المميزات:
-          - يشتغل فوق التطبيقات (SYSTEM_ALERT_WINDOW)
-          - تحليل APK كامل (ZIP + AXML + DEX)
-          - فك تشفير + تعديل + بناء + توقيع
-          - حقن Frida Gadget بدون Root
-          - اعتراض HTTPS
-          - RSA-4096 signed
-
-          ### التثبيت:
-          1. حمّل PHANTOM-RE-SIGNED.apk
-          2. فعّل مصادر غير معروفة
-          3. ثبّت
-        files: PHANTOM-RE-SIGNED.apk
-        fail_on_unmatched_files: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: RealReverseToolkit
+        path: |
+          android/app/build/outputs/apk/debug/*.apk
+          dist/*.apk
+        retention-days: 7
