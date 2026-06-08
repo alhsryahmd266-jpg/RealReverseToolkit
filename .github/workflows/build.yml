@@ -47,146 +47,120 @@ jobs:
     - name: Sync Capacitor
       run: npx cap sync android
 
-    - name: Write Complete AndroidManifest.xml
+    - name: Fix applicationId in build.gradle
+      run: |
+        sed -i 's/applicationId "[^"]*"/applicationId "com.phantomre.toolkit"/' android/app/build.gradle
+        grep "applicationId" android/app/build.gradle
+        echo "✅ applicationId = com.phantomre.toolkit"
+
+    - name: Write AndroidManifest.xml (NO FileProvider conflict)
       run: |
         cat > android/app/src/main/AndroidManifest.xml << 'MANIFEST_EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-            <!-- ═══ NETWORK ═══ -->
-            <uses-permission android:name="android.permission.INTERNET" />
-            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-            <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-            <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- NETWORK -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
-            <!-- ═══ STORAGE ═══ -->
-            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-            <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-            <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <!-- STORAGE -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-            <!-- ═══ PACKAGE MANAGEMENT ═══ -->
-            <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-            <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-            <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- PACKAGES -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
-            <!-- ═══ SYSTEM ═══ -->
-            <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-            <uses-permission android:name="android.permission.VIBRATE" />
-            <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- OVERLAY — يشتغل فوق التطبيقات -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-            <!-- ═══ HARDWARE ═══ -->
-            <uses-permission android:name="android.permission.CAMERA" />
-            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- SYSTEM -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-            <!-- ═══ PHONE ═══ -->
-            <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-            <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
-            <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+    <!-- HARDWARE -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-            <!-- ═══ ACCESSIBILITY ═══ -->
-            <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
+    <!-- PHONE -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
 
-            <!-- ═══ FEATURES ═══ -->
-            <uses-feature android:name="android.hardware.camera" android:required="false" />
-            <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
-            <uses-feature android:name="android.software.vpn" android:required="false" />
+    <!-- FEATURES -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.software.vpn" android:required="false" />
 
-            <application
-                android:allowBackup="true"
-                android:icon="@mipmap/ic_launcher"
-                android:label="PHANTOM RE"
-                android:roundIcon="@mipmap/ic_launcher_round"
-                android:supportsRtl="true"
-                android:theme="@style/AppTheme"
-                android:requestLegacyExternalStorage="true"
-                android:usesCleartextTraffic="true"
-                android:networkSecurityConfig="@xml/network_security_config"
-                android:hardwareAccelerated="true">
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="PHANTOM RE"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:hardwareAccelerated="true">
 
-                <activity
-                    android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-                    android:exported="true"
-                    android:hardwareAccelerated="true"
-                    android:label="PHANTOM RE"
-                    android:launchMode="singleTask"
-                    android:name="com.getcapacitor.BridgeActivity"
-                    android:windowSoftInputMode="adjustResize">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN" />
-                        <category android:name="android.intent.category.LAUNCHER" />
-                    </intent-filter>
-                </activity>
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:label="PHANTOM RE"
+            android:launchMode="singleTask"
+            android:name="com.getcapacitor.BridgeActivity"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
-                <provider
-                    android:name="androidx.core.content.FileProvider"
-                    android:authorities="${applicationId}.fileprovider"
-                    android:exported="false"
-                    android:grantUriPermissions="true">
-                    <meta-data
-                        android:name="android.support.FILE_PROVIDER_PATHS"
-                        android:resource="@xml/file_paths" />
-                </provider>
-
-            </application>
-        </manifest>
-        MANIFEST_EOF
+    </application>
+</manifest>
+MANIFEST_EOF
         echo "✅ AndroidManifest.xml written"
-        cat android/app/src/main/AndroidManifest.xml | head -5
 
     - name: Create Network Security Config
       run: |
         mkdir -p android/app/src/main/res/xml
         cat > android/app/src/main/res/xml/network_security_config.xml << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <network-security-config>
-            <base-config cleartextTrafficPermitted="true">
-                <trust-anchors>
-                    <certificates src="system" />
-                    <certificates src="user" />
-                </trust-anchors>
-            </base-config>
-        </network-security-config>
-        EOF
-
-    - name: Create File Provider Paths
-      run: |
-        mkdir -p android/app/src/main/res/xml
-        cat > android/app/src/main/res/xml/file_paths.xml << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <paths>
-            <external-path name="external_files" path="." />
-            <files-path name="internal_files" path="." />
-            <cache-path name="cache_files" path="." />
-        </paths>
-        EOF
-
-    - name: Set App Info in build.gradle
-      run: |
-        sed -i 's/applicationId ".*"/applicationId "com.phantomre.toolkit"/' android/app/build.gradle || true
-        sed -i 's/versionCode [0-9]*/versionCode '"$GITHUB_RUN_NUMBER"'/' android/app/build.gradle || true
-        sed -i 's/versionName "[^"]*"/versionName "1.'"$GITHUB_RUN_NUMBER"'.0"/' android/app/build.gradle || true
-        echo "✅ build.gradle updated"
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
+EOF
 
     - name: Update strings.xml
       run: |
         cat > android/app/src/main/res/values/strings.xml << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <resources>
-            <string name="app_name">PHANTOM RE</string>
-            <string name="title_activity_main">PHANTOM RE</string>
-            <string name="package_name">com.phantomre.toolkit</string>
-            <string name="custom_url_scheme">phantomre</string>
-        </resources>
-        EOF
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PHANTOM RE</string>
+    <string name="title_activity_main">PHANTOM RE</string>
+    <string name="package_name">com.phantomre.toolkit</string>
+    <string name="custom_url_scheme">phantomre</string>
+</resources>
+EOF
 
-    - name: Generate Release Keystore (RSA-4096)
+    - name: Generate Keystore RSA-4096
       run: |
         keytool -genkey -v \
           -keystore phantom-release.jks \
@@ -197,7 +171,7 @@ jobs:
           -storepass phantom2024RE \
           -keypass phantom2024RE \
           -dname "CN=PHANTOM RE, OU=Security, O=PhantomRE, L=Cairo, ST=Cairo, C=EG"
-        echo "✅ RSA-4096 Keystore generated (100 years validity)"
+        echo "✅ RSA-4096 Keystore ready"
 
     - name: Build Release APK
       run: |
@@ -208,18 +182,13 @@ jobs:
           -Pandroid.injected.signing.store.password=phantom2024RE \
           -Pandroid.injected.signing.key.alias=phantom \
           -Pandroid.injected.signing.key.password=phantom2024RE \
-          --no-daemon \
-          --stacktrace
+          --no-daemon
 
-    - name: Zipalign APK
+    - name: Zipalign + Sign APK
       run: |
         APK=$(find android/app/build/outputs/apk/release/ -name "*.apk" | head -1)
-        echo "APK: $APK — size: $(ls -lh $APK | awk '{print $5}')"
+        echo "APK: $APK ($(ls -lh $APK | awk '{print $5}'))"
         $ANDROID_HOME/build-tools/34.0.0/zipalign -v 4 "$APK" PHANTOM-RE-aligned.apk
-        echo "✅ Zipalign done"
-
-    - name: Sign APK with apksigner
-      run: |
         $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
           --ks phantom-release.jks \
           --ks-key-alias phantom \
@@ -227,18 +196,11 @@ jobs:
           --key-pass pass:phantom2024RE \
           --out PHANTOM-RE-SIGNED.apk \
           PHANTOM-RE-aligned.apk
-        echo "✅ APK signed with RSA-4096"
-
-    - name: Verify Signature
-      run: |
         $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose PHANTOM-RE-SIGNED.apk
-        echo ""
-        echo "══════════════════════════════════"
-        echo "  PHANTOM RE APK — READY"
+        echo "✅ APK signed & verified"
         ls -lh PHANTOM-RE-SIGNED.apk
-        echo "══════════════════════════════════"
 
-    - name: Upload Signed APK as Artifact
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: PHANTOM-RE-v${{ github.run_number }}-SIGNED
@@ -249,28 +211,22 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ github.run_number }}
-        name: "PHANTOM RE v${{ github.run_number }} — موقّع رقمياً RSA-4096"
+        name: "PHANTOM RE v${{ github.run_number }} — موقّع RSA-4096"
         body: |
-          ## ⚡ PHANTOM RE v${{ github.run_number }}
-          **أقوى منظومة هندسة عكسية على الإطلاق**
+          ## PHANTOM RE v${{ github.run_number }}
 
           ### المميزات:
-          - 🔬 تحليل APK ستاتيكي كامل (ZIP + AXML + DEX parsers في JS)
-          - ⚡ سير عمل كامل: فك ← تعديل ← بناء ← توقيع
-          - 💉 حقن Frida Gadget بدون Root
-          - 🌐 اعتراض HTTPS عبر VPN (بثق شهادات المستخدم)
-          - 🖥️ بريدج PC (jadx, Ghidra, radare2)
-          - 🔒 31 صلاحية Android (QUERY_ALL_PACKAGES, SYSTEM_ALERT_WINDOW...)
-
-          ### التوقيع الرقمي:
-          - **خوارزمية:** RSA 4096-bit
-          - **صلاحية:** 100 سنة
-          - **مُتحقق بـ:** apksigner
+          - يشتغل فوق التطبيقات (SYSTEM_ALERT_WINDOW)
+          - تحليل APK كامل (ZIP + AXML + DEX)
+          - فك تشفير + تعديل + بناء + توقيع
+          - حقن Frida Gadget بدون Root
+          - اعتراض HTTPS
+          - RSA-4096 signed
 
           ### التثبيت:
-          1. حمّل `PHANTOM-RE-SIGNED.apk`
-          2. فعّل "مصادر غير معروفة" في الإعدادات
-          3. ثبّت وشغّل
+          1. حمّل PHANTOM-RE-SIGNED.apk
+          2. فعّل مصادر غير معروفة
+          3. ثبّت
         files: PHANTOM-RE-SIGNED.apk
         fail_on_unmatched_files: true
       env:
