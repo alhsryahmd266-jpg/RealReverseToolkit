@@ -1,13 +1,15 @@
-name: Build Android APK
+name: PHANTOM RE — Build & Sign APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout
@@ -18,7 +20,7 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Setup Java
+    - name: Setup Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
@@ -26,6 +28,12 @@ jobs:
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+
+    - name: Install Android Build Tools
+      run: |
+        sdkmanager "build-tools;34.0.0" "platforms;android-34" "platform-tools" 2>/dev/null || true
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_PATH
 
     - name: Install dependencies
       run: npm install
@@ -39,15 +47,184 @@ jobs:
     - name: Sync Capacitor
       run: npx cap sync android
 
-    - name: Build APK
+    - name: Patch AndroidManifest — Add ALL Permissions
+      run: |
+        MANIFEST="android/app/src/main/AndroidManifest.xml"
+        python3 - <<'PYEOF'
+        import re
+
+        with open("android/app/src/main/AndroidManifest.xml", "r") as f:
+            content = f.read()
+
+        permissions = [
+            "android.permission.INTERNET",
+            "android.permission.ACCESS_NETWORK_STATE",
+            "android.permission.ACCESS_WIFI_STATE",
+            "android.permission.READ_EXTERNAL_STORAGE",
+            "android.permission.WRITE_EXTERNAL_STORAGE",
+            "android.permission.MANAGE_EXTERNAL_STORAGE",
+            "android.permission.READ_MEDIA_IMAGES",
+            "android.permission.READ_MEDIA_VIDEO",
+            "android.permission.READ_MEDIA_AUDIO",
+            "android.permission.QUERY_ALL_PACKAGES",
+            "android.permission.REQUEST_INSTALL_PACKAGES",
+            "android.permission.REQUEST_DELETE_PACKAGES",
+            "android.permission.SYSTEM_ALERT_WINDOW",
+            "android.permission.FOREGROUND_SERVICE",
+            "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
+            "android.permission.RECEIVE_BOOT_COMPLETED",
+            "android.permission.CAMERA",
+            "android.permission.RECORD_AUDIO",
+            "android.permission.READ_PHONE_STATE",
+            "android.permission.READ_PHONE_NUMBERS",
+            "android.permission.PACKAGE_USAGE_STATS",
+            "android.permission.BIND_ACCESSIBILITY_SERVICE",
+            "android.permission.VIBRATE",
+            "android.permission.WAKE_LOCK",
+            "android.permission.CHANGE_NETWORK_STATE",
+            "android.permission.CHANGE_WIFI_STATE",
+        ]
+
+        perm_lines = "\n".join(
+            f'    <uses-permission android:name="{p}" />' for p in permissions
+        )
+
+        # Also add uses-feature for VPN
+        features = """    <uses-feature android:name="android.software.vpn" android:required="false" />
+            <uses-feature android:name="android.hardware.camera" android:required="false" />"""
+
+        # Insert after <manifest ...>
+        content = re.sub(
+            r'(<manifest[^>]*>)',
+            r'\1\n' + perm_lines + '\n' + features,
+            content,
+            count=1
+        )
+
+        # Add android:requestLegacyExternalStorage and other attributes to <application>
+        content = content.replace(
+            'android:label=',
+            'android:label="PHANTOM RE"\n        android:requestLegacyExternalStorage="true"\n        android:usesCleartextTraffic="true"\n        android:networkSecurityConfig="@xml/network_security_config"\n        android:label='
+        )
+
+        with open("android/app/src/main/AndroidManifest.xml", "w") as f:
+            f.write(content)
+
+        print("✅ AndroidManifest.xml patched with all permissions")
+        PYEOF
+
+    - name: Create Network Security Config (Allow All Traffic)
+      run: |
+        mkdir -p android/app/src/main/res/xml
+        cat > android/app/src/main/res/xml/network_security_config.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <network-security-config>
+            <base-config cleartextTrafficPermitted="true">
+                <trust-anchors>
+                    <certificates src="system" />
+                    <certificates src="user" />
+                </trust-anchors>
+            </base-config>
+        </network-security-config>
+        EOF
+
+    - name: Set App Name & Version
+      run: |
+        # Update strings.xml
+        cat > android/app/src/main/res/values/strings.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <string name="app_name">PHANTOM RE</string>
+            <string name="title_activity_main">PHANTOM RE</string>
+            <string name="package_name">com.phantomre.toolkit</string>
+            <string name="custom_url_scheme">phantomre</string>
+        </resources>
+        EOF
+        # Update build.gradle app id
+        sed -i 's/applicationId ".*"/applicationId "com.phantomre.toolkit"/' android/app/build.gradle || true
+        sed -i 's/versionCode 1/versionCode '"$GITHUB_RUN_NUMBER"'/' android/app/build.gradle || true
+        sed -i 's/versionName "1.0"/versionName "1.'"$GITHUB_RUN_NUMBER"'.0"/' android/app/build.gradle || true
+
+    - name: Generate Release Keystore
+      run: |
+        keytool -genkey -v \
+          -keystore phantom-release.jks \
+          -alias phantom \
+          -keyalg RSA \
+          -keysize 4096 \
+          -validity 36500 \
+          -storepass phantom2024RE \
+          -keypass phantom2024RE \
+          -dname "CN=PHANTOM RE, OU=Security Research, O=PhantomRE, L=Cairo, ST=Cairo, C=EG"
+        echo "✅ Keystore generated (RSA 4096-bit, valid 100 years)"
+
+    - name: Build Release APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleRelease \
+          -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/phantom-release.jks \
+          -Pandroid.injected.signing.store.password=phantom2024RE \
+          -Pandroid.injected.signing.key.alias=phantom \
+          -Pandroid.injected.signing.key.password=phantom2024RE
 
-    - name: Upload APK
+    - name: Zipalign APK
+      run: |
+        APK=$(find android/app/build/outputs/apk/release/ -name "*.apk" | head -1)
+        echo "APK found: $APK"
+        $ANDROID_HOME/build-tools/34.0.0/zipalign -v 4 "$APK" PHANTOM-RE-aligned.apk
+        echo "✅ Zipalign done"
+
+    - name: Sign APK with apksigner
+      run: |
+        $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+          --ks phantom-release.jks \
+          --ks-key-alias phantom \
+          --ks-pass pass:phantom2024RE \
+          --key-pass pass:phantom2024RE \
+          --out PHANTOM-RE-SIGNED.apk \
+          PHANTOM-RE-aligned.apk
+        echo "✅ APK signed with RSA-4096"
+
+    - name: Verify Signature
+      run: |
+        $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose PHANTOM-RE-SIGNED.apk
+        echo "✅ Signature verified"
+        ls -lh PHANTOM-RE-SIGNED.apk
+
+    - name: Upload Signed APK as Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: RealReverseToolkit-APK
-        path: android/app/build/outputs/apk/debug/*.apk
+        name: PHANTOM-RE-v${{ github.run_number }}-SIGNED
+        path: PHANTOM-RE-SIGNED.apk
         retention-days: 30
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ github.run_number }}
+        name: "PHANTOM RE v${{ github.run_number }} — موقّع رقمياً"
+        body: |
+          ## PHANTOM RE v${{ github.run_number }}
+          منظومة الهندسة العكسية المطلقة
+
+          ### المميزات:
+          - 🔬 تحليل APK ستاتيكي كامل (ZIP + AXML + DEX)
+          - ⚡ سير عمل التعديل الكامل (فك ← تعديل ← بناء ← توقيع)
+          - 💉 حقن Frida Gadget بدون Root
+          - 🌐 اعتراض الشبكة عبر VPN
+          - 🖥️ بريدج للـ PC (jadx, Ghidra, radare2)
+
+          ### التوقيع:
+          - RSA 4096-bit
+          - صلاحية 100 سنة
+          - Verified by apksigner
+
+          ### التثبيت:
+          1. حمّل PHANTOM-RE-SIGNED.apk
+          2. فعّل "مصادر غير معروفة"
+          3. ثبّت وشغّل
+        files: PHANTOM-RE-SIGNED.apk
+        fail_on_unmatched_files: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
